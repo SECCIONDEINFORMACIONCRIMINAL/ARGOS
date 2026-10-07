@@ -190,6 +190,20 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var
 .lc .flow .stp .sn{flex:0 0 28px;width:28px;height:28px;border-radius:50%;background:#06d6a0;color:#06241c;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;z-index:1}
 .lc .flow .stp .st{flex:1;font-size:13px;line-height:1.55;padding-top:4px;color:var(--tx,#e8edf2)}
 .lc .flow .stp .st code{background:var(--bg1);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:12px;color:#06d6a0}
+.lmedia{margin:22px 0 4px;border-top:1px solid rgba(255,255,255,.08);padding-top:18px}
+.lmedia .lmh{font-size:14px;font-weight:800;color:#06d6a0;margin-bottom:12px;letter-spacing:.3px}
+.lmedia .lmu{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;background:rgba(6,214,160,.06);border:1px dashed rgba(6,214,160,.35);border-radius:10px;padding:12px 14px}
+.lmedia .lmbtn{cursor:pointer;margin:0}
+.lmedia .lmhint{font-size:12px;color:var(--t2,#9aa6b2)}
+.lmedia .lmg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.lmedia .lmfig{position:relative;margin:0;background:#141b22;border:1px solid rgba(255,255,255,.08);border-radius:10px;overflow:hidden}
+.lmedia .lmfig img{width:100%;height:auto;display:block;cursor:zoom-in}
+.lmedia .lmfig figcaption{padding:8px 10px;font-size:12px;color:var(--t2,#c3ccd4);line-height:1.4}
+.lmedia .lmdel{position:absolute;top:8px;right:8px;border:none;background:rgba(230,57,70,.92);color:#fff;border-radius:8px;padding:5px 9px;font-size:13px;cursor:pointer;line-height:1}
+.lmedia .lmempty{grid-column:1/-1;font-size:13px;color:var(--t3,#7c8894);padding:10px 0}
+.lmlb{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:9999;cursor:zoom-out;padding:24px}
+.lmlb.on{display:flex}
+.lmlb img{max-width:95%;max-height:95%;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
 .lc .ej code{background:var(--bg1);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:12px;color:#06d6a0}
 .lc .sl{list-style:none;padding:0;margin:14px 0}
 .lc .sl li{padding:10px 14px;border-left:3px solid var(--cB);margin-bottom:8px;background:rgba(67,97,238,.05);border-radius:0 var(--rs) var(--rs) 0;font-size:14px;color:var(--t2)}
@@ -1228,6 +1242,121 @@ showApp = function() {
   loadProgressFromCloud();
   navTo('home');
 };
+
+// ============================================================
+// LESSON IMAGES / CAPTURAS DE EJEMPLO (admin sube, todos ven)
+// ============================================================
+function lmEscape(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function injectLessonMedia(key){
+  var lc = document.querySelector('#lC .lc');
+  if(!lc) return;
+  var old = document.getElementById('lmedia');
+  if(old) old.parentNode.removeChild(old);
+  var sec = document.createElement('div');
+  sec.className='lmedia'; sec.id='lmedia';
+  var nav = lc.querySelector('.lnav');
+  if(nav) lc.insertBefore(sec,nav); else lc.appendChild(sec);
+  renderLessonMediaUI(key);
+}
+
+function renderLessonMediaUI(key){
+  var sec=document.getElementById('lmedia'); if(!sec) return;
+  var isAdmin = (typeof currentUserRole!=='undefined') && currentUserRole==='admin';
+  var html='<div class="lmh">\uD83D\uDCF8 Capturas de ejemplo</div>';
+  if(isAdmin){
+    html+='<div class="lmu"><label class="btn btn-s lmbtn">\u2795 Agregar captura'+
+          '<input type="file" accept="image/*" style="display:none" onchange="handleLessonImageUpload(this,\''+key+'\')"></label>'+
+          '<span class="lmhint">Se guarda en la nube y la ver\u00e1n todos los estudiantes.</span></div>';
+  }
+  html+='<div class="lmg" id="lmg"></div>';
+  sec.innerHTML=html;
+  loadLessonImages(key);
+}
+
+function loadLessonImages(key){
+  var g=document.getElementById('lmg'); if(!g) return;
+  var isAdmin=(typeof currentUserRole!=='undefined')&&currentUserRole==='admin';
+  g.innerHTML='<div class="lmempty">Cargando capturas\u2026</div>';
+  db.collection('lessonImages').where('lesson','==',key).get().then(function(snap){
+    if(snap.empty){
+      g.innerHTML='<div class="lmempty">'+(isAdmin?'A\u00fan no hay capturas en esta lecci\u00f3n. Agrega la primera con el bot\u00f3n de arriba.':'Esta lecci\u00f3n a\u00fan no tiene capturas de ejemplo.')+'</div>';
+      return;
+    }
+    var items=[]; snap.forEach(function(doc){ items.push({id:doc.id,d:doc.data()}); });
+    items.sort(function(a,b){ return (a.d.created||0)-(b.d.created||0); });
+    var html='';
+    for(var i=0;i<items.length;i++){
+      var it=items[i]; var cap=it.d.caption?lmEscape(it.d.caption):'';
+      html+='<figure class="lmfig"><img src="'+it.d.img+'" alt="'+cap+'" loading="lazy" onclick="openLmBox(this.src)">';
+      if(cap) html+='<figcaption>'+cap+'</figcaption>';
+      if(isAdmin) html+='<button class="lmdel" title="Eliminar" onclick="deleteLessonImage(\''+it.id+'\',\''+key+'\')">\uD83D\uDDD1\uFE0F</button>';
+      html+='</figure>';
+    }
+    g.innerHTML=html;
+  }).catch(function(e){
+    g.innerHTML='<div class="lmempty">No se pudieron cargar las capturas.</div>';
+    console.error('lessonImages load',e);
+  });
+}
+
+function handleLessonImageUpload(input,key){
+  var file=input.files&&input.files[0]; if(!file) return;
+  if(file.type.indexOf('image/')!==0){ alert('Selecciona un archivo de imagen.'); input.value=''; return; }
+  if(file.size>15*1024*1024){ alert('La imagen es muy grande (m\u00e1x 15 MB).'); input.value=''; return; }
+  var caption=prompt('Descripci\u00f3n de la captura (opcional):','')||'';
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=new Image();
+    img.onload=function(){
+      var max=1280, w=img.width, h=img.height;
+      if(w>max){ h=Math.round(h*max/w); w=max; }
+      var canvas=document.createElement('canvas'); canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      var dataUrl=canvas.toDataURL('image/jpeg',0.72);
+      if(dataUrl.length>1000000) dataUrl=canvas.toDataURL('image/jpeg',0.5);
+      if(dataUrl.length>1040000){ alert('La imagen sigue muy pesada incluso comprimida. Prueba con una captura m\u00e1s peque\u00f1a.'); input.value=''; return; }
+      db.collection('lessonImages').add({
+        lesson:key, img:dataUrl, caption:caption, created:Date.now(),
+        by:(typeof currentUser!=='undefined'&&currentUser?currentUser.email:'')
+      }).then(function(){ input.value=''; loadLessonImages(key); })
+       .catch(function(err){ alert('Error al guardar: '+err.message); });
+    };
+    img.onerror=function(){ alert('No se pudo leer la imagen.'); input.value=''; };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function deleteLessonImage(id,key){
+  if(!((typeof currentUserRole!=='undefined')&&currentUserRole==='admin')) return;
+  if(!confirm('\u00bfEliminar esta captura para todos los estudiantes?')) return;
+  db.collection('lessonImages').doc(id).delete()
+    .then(function(){ loadLessonImages(key); })
+    .catch(function(err){ alert('Error al eliminar: '+err.message); });
+}
+
+function openLmBox(src){
+  var ov=document.getElementById('lmLightbox');
+  if(!ov){
+    ov=document.createElement('div'); ov.id='lmLightbox'; ov.className='lmlb';
+    ov.onclick=function(){ ov.classList.remove('on'); };
+    ov.innerHTML='<img alt="">'; document.body.appendChild(ov);
+  }
+  ov.querySelector('img').src=src; ov.classList.add('on');
+}
+
+// Hook into openLesson so the media section loads after each lesson renders
+if (typeof openLesson === 'function') {
+  var _origOpenLesson = openLesson;
+  openLesson = function(idx){
+    _origOpenLesson(idx);
+    var key = currentTool+'_'+currentLevel+'_'+idx;
+    injectLessonMedia(key);
+  };
+}
 </script>
 </body>
 </html>
