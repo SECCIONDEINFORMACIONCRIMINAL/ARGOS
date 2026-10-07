@@ -324,6 +324,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var
     <h1><span>TechLearn Pro</span></h1>
     <p class="sub">Inicia sesión para acceder a tus cursos</p>
     <div class="login-error" id="loginError"></div>
+    <div id="authDomainWarning" style="display:none;background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.3);border-radius:10px;padding:12px 16px;color:#ff6b35;font-size:12px;margin-bottom:16px;text-align:left">
+      ⚠️ <strong>Dominio no autorizado</strong>: Este sitio (<span id="currentDomain"></span>) no está en la lista de dominios autorizados de Firebase. Ve a <strong>Firebase Console → Authentication → Settings → Authorized domains</strong> y agrega este dominio.
+    </div>
     <div class="login-loading" id="loginLoading"><div class="spinner"></div><p style="color:var(--t2);font-size:13px">Autenticando...</p></div>
 
     <div id="loginForms">
@@ -361,7 +364,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var
         <label>Contraseña (mínimo 6 caracteres)</label>
         <input type="password" id="regPassword" placeholder="Crea una contraseña">
         <button class="btn-primary" onclick="registerEmail()">Crear cuenta</button>
-        <p class="toggle-form">¿Ya tienes cuenta? <a onclick="showLogin()">Inicia sesión</a></p>
+        <p class="toggle-form">¿Ya tienes cuenta? <a onclick="showLoginForm()">Inicia sesión</a></p>
       </div>
 
       <!-- Reset Password Form -->
@@ -369,7 +372,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var
         <label>Correo electrónico de recuperación</label>
         <input type="email" id="resetEmail" placeholder="tu@correo.com">
         <button class="btn-primary" onclick="resetPassword()">Enviar enlace de recuperación</button>
-        <p class="toggle-form"><a onclick="showLogin()">Volver a iniciar sesión</a></p>
+        <p class="toggle-form"><a onclick="showLoginForm()">Volver a iniciar sesión</a></p>
       </div>
     </div>
   </div>
@@ -549,6 +552,12 @@ firebase.initializeApp(firebaseConfig);
 var auth = firebase.auth();
 var db = firebase.firestore();
 
+// Verificar que Firebase Auth funciona en este dominio
+console.log('Firebase Auth inicializado en:', window.location.hostname);
+if (window.location.hostname !== 'localhost' && window.location.hostname !== 'argos-370df.firebaseapp.com' && !window.location.hostname.endsWith('.github.io')) {
+  console.warn('Dominio no autorizado en Firebase Auth:', window.location.hostname);
+}
+
 // Admin emails — SOLO estos usuarios pueden ver el módulo admin
 var ADMIN_EMAILS = ['tkautliz@gmail.com'];
 
@@ -575,7 +584,16 @@ auth.onAuthStateChanged(function(user) {
   } else {
     currentUser = null;
     currentUserRole = 'user';
-    showLogin();
+    showLoginScreen();
+    // Check if domain is authorized
+    var hostname = window.location.hostname;
+    var knownDomains = ['localhost', '127.0.0.1', 'argos-370df.firebaseapp.com', 'argos-370df.web.app'];
+    var isGitHub = hostname.endsWith('.github.io');
+    var isAuthorized = knownDomains.indexOf(hostname) >= 0 || isGitHub;
+    if (!isAuthorized && hostname !== '') {
+      document.getElementById('authDomainWarning').style.display = '';
+      document.getElementById('currentDomain').textContent = hostname;
+    }
   }
 });
 
@@ -635,18 +653,28 @@ function updateUIForUser() {
 // LOGIN FUNCTIONS
 // ============================================================
 function loginGoogle() {
+  console.log('loginGoogle clic');
   showLoginLoading(true);
+  hideLoginError();
   var provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(function(err) {
+  auth.signInWithPopup(provider).then(function(result) {
+    console.log('Google login OK:', result.user.email);
+  }).catch(function(err) {
+    console.error('Google login error:', err.code, err.message);
     showLoginLoading(false);
     showLoginError(getAuthError(err));
   });
 }
 
 function loginFacebook() {
+  console.log('loginFacebook clic');
   showLoginLoading(true);
+  hideLoginError();
   var provider = new firebase.auth.FacebookAuthProvider();
-  auth.signInWithPopup(provider).catch(function(err) {
+  auth.signInWithPopup(provider).then(function(result) {
+    console.log('Facebook login OK:', result.user.email);
+  }).catch(function(err) {
+    console.error('Facebook login error:', err.code, err.message);
     showLoginLoading(false);
     showLoginError(getAuthError(err));
   });
@@ -699,7 +727,7 @@ function logout() {
   closeUserMenu();
 }
 
-function showLogin() {
+function showLoginScreen() {
   document.getElementById('loginScreen').classList.remove('hidden');
   document.getElementById('mainApp').classList.add('hidden');
   document.getElementById('aF').classList.add('hidden');
@@ -718,6 +746,12 @@ function showLoginError(msg) {
   var el = document.getElementById('loginError');
   el.textContent = msg;
   el.classList.add('show');
+}
+
+function hideLoginError() {
+  var el = document.getElementById('loginError');
+  el.textContent = '';
+  el.classList.remove('show');
 }
 
 function showLoginLoading(show) {
@@ -744,14 +778,11 @@ function showRegister() {
   document.getElementById('loginError').classList.remove('show');
 }
 
-function showLogin() {
+function showLoginForm() {
   document.getElementById('emailLoginForm').style.display = '';
   document.getElementById('emailRegisterForm').style.display = 'none';
   document.getElementById('resetForm').style.display = 'none';
   document.getElementById('loginError').classList.remove('show');
-  document.getElementById('loginScreen').classList.remove('hidden');
-  document.getElementById('mainApp').classList.add('hidden');
-  document.getElementById('aF').classList.add('hidden');
 }
 
 function showResetPassword() {
