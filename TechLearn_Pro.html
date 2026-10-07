@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TechLearn Pro</title>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<style>
+:root {
+  --bg0:#0f0f1a; --bg1:#1a1a2e; --bg2:#16213e; --bg3:#1e2d50;
+  --cB:#4361ee; --cC:#4cc9f0; --cP:#7b2cbf; --cK:#f72585;
+  --cG:#06d6a0; --cO:#ff6b35; --cY:#ffd166;
+  --t1:#e8e8f0; --t2:#a0a0b8; --t3:#6b6b80;
+  --bd:#2a2a40; --r:16px; --rs:10px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg0);color:var(--t1);min-height:100vh;overflow-x:hidden}
+
+.orb-bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.orb-bg .o{position:absolute;border-radius:50%;filter:blur(80px);opacity:.13;animation:fl 20s infinite}
+.o:nth-child(1){width:500px;height:500px;background:var(--cB);top:-10%;left:-5%}
+.o:nth-child(2){width:400px;height:400px;background:var(--cP);top:50%;right:-5%;animation-delay:-7s}
+.o:nth-child(3){width:300px;height:300px;background:var(--cC);bottom:-5%;left:30%;animation-delay:-14s}
+@keyframes fl{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(30px,-30px) scale(1.05)}66%{transform:translate(-20px,20px) scale(.95)}}
+
+/* ==================== LOGIN SCREEN ==================== */
+.login-wrap{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1000;display:flex;align-items:center;justify-content:center;background:var(--bg0)}
+.login-wrap.hidden{display:none}
+.login-card{width:420px;max-width:92vw;background:var(--bg1);border:1px solid var(--bd);border-radius:var(--r);padding:48px 40px;box-shadow:0 20px 60px rgba(0,0,0,.5);text-align:center;animation:su .4s ease}
+@keyframes su{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.login-card .logo-big{width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,var(--cB),var(--cP));display:flex;align-items:center;justify-content:center;font-weight:900;font-size:32px;color:#fff;margin:0 auto 24px}
+.login-card h1{font-size:28px;font-weight:800;margin-bottom:6px}
+.login-card h1 span{background:linear-gradient(135deg,var(--cC),var(--cB),var(--cP));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.login-card .sub{color:var(--t2);font-size:14px;margin-bottom:32px}
+.login-card .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--t3);font-size:12px}
+.login-card .divider::before,.login-card .divider::after{content:'';flex:1;height:1px;background:var(--bd)}
+
+.btn-google{width:100%;padding:14px;border-radius:var(--rs);background:#fff;color:#333;font-size:15px;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;transition:all .2s;margin-bottom:12px}
+.btn-google:hover{background:#f0f0f0;transform:translateY(-1px);box-shadow:0 4px 15px rgba(0,0,0,.15)}
+.btn-google svg{width:20px;height:20px}
+
+.btn-facebook{width:100%;padding:14px;border-radius:var(--rs);background:#1877f2;color:#fff;font-size:15px;font-weight:600;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;transition:all .2s;margin-bottom:12px}
+.btn-facebook:hover{background:#166fe5;transform:translateY(-1px)}
+
+.email-form{text-align:left}
+.email-form label{display:block;font-size:12px;color:var(--t3);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:1px}
+.email-form input{width:100%;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rs);padding:12px 16px;color:var(--t1);font-size:14px;outline:none;margin-bottom:14px}
+.email-form input:focus{border-color:var(--cB)}
+.email-form input::placeholder{color:var(--t3)}
+
+.btn-primary{width:100%;padding:14px;border-radius:var(--rs);background:linear-gradient(135deg,var(--cB),var(--cP));color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;transition:all .2s;margin-bottom:12px}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(67,97,238,.4)}
+
+.btn-secondary{width:100%;padding:14px;border-radius:var(--rs);background:var(--bg2);border:1px solid var(--bd);color:var(--t2);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-bottom:12px}
+.btn-secondary:hover{border-color:var(--cB);color:var(--t1)}
+
+.toggle-form{color:var(--t2);font-size:13px;margin-top:16px}
+.toggle-form a{color:var(--cC);cursor:pointer;text-decoration:underline}
+.toggle-form a:hover{color:var(--cB)}
+
+.login-error{background:rgba(247,37,133,.1);border:1px solid rgba(247,37,133,.3);border-radius:var(--rs);padding:12px 16px;color:var(--cK);font-size:13px;margin-bottom:16px;display:none}
+.login-error.show{display:block}
+
+.login-loading{display:none;text-align:center;padding:20px}
+.login-loading.show{display:block}
+.login-loading .spinner{width:36px;height:36px;border:3px solid var(--bd);border-top-color:var(--cB);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ==================== MAIN APP ==================== */
+.app{position:relative;z-index:1;display:flex;min-height:100vh}
+.app.hidden{display:none}
+
+/* Sidebar */
+.sb{width:72px;background:var(--bg1);border-right:1px solid var(--bd);display:flex;flex-direction:column;align-items:center;padding:16px 0;position:fixed;top:0;left:0;height:100vh;z-index:100}
+.sb .logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--cB),var(--cP));display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;color:#fff;margin-bottom:24px;cursor:pointer}
+.sb .ni{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;cursor:pointer;transition:all .2s;color:var(--t3);font-size:20px;position:relative}
+.sb .ni:hover{background:var(--bg3);color:var(--t1)}
+.sb .ni.on{background:var(--cB);color:#fff;box-shadow:0 4px 15px rgba(67,97,238,.4)}
+.sb .ni .tp{position:absolute;left:60px;background:var(--bg2);color:var(--t1);padding:6px 12px;border-radius:8px;font-size:12px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s;z-index:999}
+.sb .ni:hover .tp{opacity:1}
+.sb .sp{flex:1}
+
+/* Header */
+.mc{margin-left:72px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.hd{height:64px;background:var(--bg1);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 24px;position:sticky;top:0;z-index:50}
+.hd .pt{font-size:18px;font-weight:700}
+.hd .ps{font-size:13px;color:var(--t2);margin-left:12px}
+.hd .sp{flex:1}
+.hd .user-info{display:flex;align-items:center;gap:10px;cursor:pointer;position:relative}
+.hd .user-avatar{width:36px;height:36px;border-radius:10px;overflow:hidden;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff}
+.hd .user-avatar img{width:100%;height:100%;object-fit:cover}
+.hd .user-name{font-size:13px;font-weight:600;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hd .user-role{font-size:10px;color:var(--cC);font-weight:700;text-transform:uppercase;letter-spacing:1px}
+
+/* User dropdown */
+.user-dropdown{position:absolute;top:50px;right:0;width:240px;background:var(--bg1);border:1px solid var(--bd);border-radius:var(--r);box-shadow:0 12px 40px rgba(0,0,0,.5);z-index:200;display:none;overflow:hidden}
+.user-dropdown.show{display:block;animation:su .2s ease}
+.user-dropdown .dd-header{padding:16px;background:var(--bg2);border-bottom:1px solid var(--bd)}
+.user-dropdown .dd-header .dd-email{font-size:12px;color:var(--t2);word-break:break-all}
+.user-dropdown .dd-item{padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .15s;font-size:13px;color:var(--t2)}
+.user-dropdown .dd-item:hover{background:var(--bg3);color:var(--t1)}
+.user-dropdown .dd-item.danger{color:var(--cK)}
+.user-dropdown .dd-item.danger:hover{background:rgba(247,37,133,.1)}
+
+.pc{flex:1;padding:24px;overflow-y:auto}
+.pg{display:none}.pg.on{display:block}
+
+/* ==================== HERO ==================== */
+.hero{background:linear-gradient(135deg,rgba(67,97,238,.2),rgba(123,44,191,.15));border:1px solid var(--bd);border-radius:var(--r);padding:40px;margin-bottom:24px;position:relative;overflow:hidden}
+.hero h1{font-size:32px;font-weight:800;line-height:1.2;margin-bottom:8px}
+.hero h1 span{background:linear-gradient(135deg,var(--cC),var(--cB),var(--cP));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{color:var(--t2);font-size:15px;max-width:600px}
+.hero .hs{display:flex;gap:24px;margin-top:24px}
+.hs .st{text-align:center}
+.hs .st .nm{font-size:28px;font-weight:800;color:var(--cC)}
+.hs .st .lb{font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:1px}
+
+/* ==================== COURSE CARDS ==================== */
+.cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:24px}
+.cc{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:24px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.cc:hover{transform:translateY(-4px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.cc .ci{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:16px}
+.cc h3{font-size:18px;font-weight:700;margin-bottom:6px}
+.cc .cd{font-size:13px;color:var(--t2);margin-bottom:16px;line-height:1.5}
+.cc .cm{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--t3)}
+.cm .ls{display:flex;align-items:center;gap:4px}
+.cm .lv{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(6,214,160,.15);color:var(--cG)}
+.cpb{height:4px;background:var(--bd);border-radius:2px;margin-top:12px;overflow:hidden}
+.cpb .fl{height:100%;border-radius:2px;transition:width .5s}
+
+.cc[data-t="excel"] .ci{background:rgba(6,214,160,.15);color:var(--cG)}
+.cc[data-t="excel"] .cpb .fl{background:var(--cG)}
+.cc[data-t="excel"]:hover{border-color:var(--cG)}
+.cc[data-t="powerpoint"] .ci{background:rgba(255,107,53,.15);color:var(--cO)}
+.cc[data-t="powerpoint"] .cpb .fl{background:var(--cO)}
+.cc[data-t="powerpoint"]:hover{border-color:var(--cO)}
+.cc[data-t="photoshop"] .ci{background:rgba(67,97,238,.15);color:var(--cB)}
+.cc[data-t="photoshop"] .cpb .fl{background:var(--cB)}
+.cc[data-t="photoshop"]:hover{border-color:var(--cB)}
+.cc[data-t="illustrator"] .ci{background:rgba(247,37,133,.15);color:var(--cK)}
+.cc[data-t="illustrator"] .cpb .fl{background:var(--cK)}
+.cc[data-t="illustrator"]:hover{border-color:var(--cK)}
+.cc[data-t="qgis"] .ci{background:rgba(76,201,240,.15);color:var(--cC)}
+.cc[data-t="qgis"] .cpb .fl{background:var(--cC)}
+.cc[data-t="qgis"]:hover{border-color:var(--cC)}
+
+/* ==================== COURSE DETAIL ==================== */
+.ch{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:32px;margin-bottom:20px}
+.ch .chi{width:64px;height:64px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:16px}
+.ch h2{font-size:26px;font-weight:800;margin-bottom:8px}
+.ch p{color:var(--t2);font-size:14px;line-height:1.6}
+.ch .chm{display:flex;gap:20px;margin-top:16px;font-size:13px;color:var(--t3)}
+
+.lt{display:flex;gap:8px;margin-bottom:20px}
+.ltb{padding:10px 20px;border-radius:var(--rs);cursor:pointer;font-size:13px;font-weight:600;background:var(--bg2);border:1px solid var(--bd);color:var(--t2);transition:all .2s}
+.ltb:hover{border-color:var(--cB);color:var(--t1)}
+.ltb.on{background:var(--cB);color:#fff;border-color:var(--cB)}
+
+.ll{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.li{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rs);padding:16px 20px;display:flex;align-items:center;cursor:pointer;transition:all .2s}
+.li:hover{border-color:var(--cB);background:var(--bg3)}
+.li.done{border-left:3px solid var(--cG)}
+.li .ln{width:32px;height:32px;border-radius:8px;background:var(--bg1);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--t3);margin-right:16px}
+.li.done .ln{background:rgba(6,214,160,.15);color:var(--cG)}
+.li .lif{flex:1}
+.li .lif h4{font-size:14px;font-weight:600;margin-bottom:2px}
+.li .lif .ld{font-size:12px;color:var(--t3)}
+.li .lst{font-size:18px}
+.li.done .lst{color:var(--cG)}
+
+.lc{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:32px;line-height:1.8}
+.lc h3{font-size:22px;font-weight:700;margin-bottom:16px;color:var(--cC)}
+.lc p{margin-bottom:14px;color:var(--t2);font-size:14px}
+.tb{background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.2);border-radius:var(--rs);padding:14px 18px;margin:16px 0;font-size:13px}
+.tb .tl{color:var(--cY);font-weight:700;font-size:12px;margin-bottom:4px}
+.lc .sl{list-style:none;padding:0;margin:14px 0}
+.lc .sl li{padding:10px 14px;border-left:3px solid var(--cB);margin-bottom:8px;background:rgba(67,97,238,.05);border-radius:0 var(--rs) var(--rs) 0;font-size:14px;color:var(--t2)}
+.lc .sl li strong{color:var(--t1)}
+.lc .ks{display:inline-block;background:var(--bg1);border:1px solid var(--bd);padding:2px 8px;border-radius:6px;font-family:monospace;font-size:12px;color:var(--cC)}
+.lc code{background:var(--bg1);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:12px;color:var(--cC)}
+.lnav{display:flex;gap:12px;margin-top:24px}
+
+.btn{padding:10px 24px;border-radius:var(--rs);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+.btn-p{background:var(--cB);color:#fff}
+.btn-p:hover{background:#3651d4;box-shadow:0 4px 15px rgba(67,97,238,.3)}
+.btn-s{background:var(--bg1);color:var(--t2);border:1px solid var(--bd)}
+.btn-s:hover{border-color:var(--t3);color:var(--t1)}
+.btn-g{background:var(--cG);color:#fff}
+.btn-g:hover{background:#05c090}
+.btn-d{background:var(--cK);color:#fff}
+.btn-d:hover{background:#d4216a}
+
+/* ==================== PROGRESS ==================== */
+.po{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.poc{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rs);padding:20px;text-align:center}
+.poc .pi{font-size:28px;margin-bottom:8px}
+.poc .pl{font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:1px}
+.poc .pv{font-size:32px;font-weight:800;margin:4px 0}
+.poc .pb{height:6px;background:var(--bd);border-radius:3px;margin-top:8px;overflow:hidden}
+.poc .pb .fl{height:100%;border-radius:3px}
+.sc{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:24px;margin-bottom:20px}
+.sc h3{font-size:16px;margin-bottom:16px}
+.sg{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.sd{width:100%;aspect-ratio:1;border-radius:6px;background:var(--bg1);transition:background .2s}
+.sd.ac{background:rgba(6,214,160,.3)}
+
+/* ==================== RESOURCES ==================== */
+.sb2{display:flex;margin-bottom:20px}
+.sb2 input{flex:1;background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rs);padding:12px 18px;color:var(--t1);font-size:14px;outline:none}
+.sb2 input:focus{border-color:var(--cB)}
+.sb2 input::placeholder{color:var(--t3)}
+.rg{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.rc{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--rs);padding:20px;transition:all .2s}
+.rc:hover{border-color:var(--cB)}
+.rc .rt{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:10px}
+.rt.video{background:rgba(247,37,133,.15);color:var(--cK)}
+.rt.doc{background:rgba(67,97,238,.15);color:var(--cB)}
+.rt.course{background:rgba(6,214,160,.15);color:var(--cG)}
+.rc h4{font-size:14px;font-weight:600;margin-bottom:6px}
+.rc p{font-size:12px;color:var(--t2);line-height:1.5}
+.rc .rl{display:inline-block;margin-top:10px;font-size:12px;color:var(--cC);cursor:pointer;text-decoration:none}
+.rc .rl:hover{text-decoration:underline}
+
+/* ==================== ADMIN USERS MODULE ==================== */
+.admin-header{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:32px;margin-bottom:24px}
+.admin-header h2{font-size:24px;font-weight:800;margin-bottom:6px}
+.admin-header p{color:var(--t2);font-size:14px}
+.admin-header .stats{display:flex;gap:24px;margin-top:16px}
+.admin-header .stat{text-align:center}
+.admin-header .stat .val{font-size:28px;font-weight:800;color:var(--cC)}
+.admin-header .stat .label{font-size:11px;color:var(--t3);text-transform:uppercase}
+
+.user-table-wrap{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;margin-bottom:24px}
+.user-table{width:100%;border-collapse:collapse}
+.user-table th{background:var(--bg3);padding:14px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--bd)}
+.user-table td{padding:14px 16px;border-bottom:1px solid var(--bd);font-size:13px;color:var(--t2);vertical-align:middle}
+.user-table tr:hover td{background:var(--bg3)}
+.user-table .u-avatar{width:32px;height:32px;border-radius:8px;overflow:hidden;background:var(--bg1);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--cC);margin-right:10px;display:inline-block;vertical-align:middle}
+.user-table .u-avatar img{width:100%;height:100%;object-fit:cover}
+.user-table .u-name{font-weight:600;color:var(--t1)}
+.user-table .u-email{font-size:12px;color:var(--t3)}
+.role-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase}
+.role-badge.admin{background:rgba(123,44,191,.15);color:var(--cP)}
+.role-badge.user{background:rgba(6,214,160,.15);color:var(--cG)}
+.role-badge.pending{background:rgba(255,209,102,.15);color:var(--cY)}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.status-dot.online{background:var(--cG)}
+.status-dot.offline{background:var(--t3)}
+
+.add-user-card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:32px;margin-bottom:24px}
+.add-user-card h3{font-size:18px;font-weight:700;margin-bottom:20px}
+.add-user-card .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.add-user-card label{display:block;font-size:11px;color:var(--t3);margin-bottom:4px;font-weight:700;text-transform:uppercase}
+.add-user-card input,.add-user-card select{width:100%;background:var(--bg1);border:1px solid var(--bd);border-radius:var(--rs);padding:10px 14px;color:var(--t1);font-size:13px;outline:none}
+.add-user-card input:focus,.add-user-card select:focus{border-color:var(--cB)}
+.add-user-card select option{background:var(--bg1);color:var(--t1)}
+
+.invite-card{background:var(--bg2);border:1px solid var(--bd);border-radius:var(--r);padding:32px;margin-bottom:24px}
+.invite-card h3{font-size:18px;font-weight:700;margin-bottom:12px}
+.invite-card p{color:var(--t2);font-size:13px;margin-bottom:20px}
+.invite-card .invite-link-wrap{display:flex;gap:8px}
+.invite-card .invite-link-wrap input{flex:1;background:var(--bg1);border:1px solid var(--bd);border-radius:var(--rs);padding:10px 14px;color:var(--cC);font-size:13px;font-family:monospace}
+.invite-card .invite-link-wrap button{padding:10px 20px;border-radius:var(--rs);background:var(--cB);color:#fff;border:none;cursor:pointer;font-weight:600;font-size:13px;transition:all .2s}
+.invite-card .invite-link-wrap button:hover{background:#3651d4}
+
+/* ==================== AI ASSISTANT ==================== */
+.ai-fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--cP),var(--cB));display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:24px;z-index:200;box-shadow:0 4px 20px rgba(123,44,191,.4);transition:transform .3s,box-shadow .3s}
+.ai-fab:hover{transform:scale(1.08);box-shadow:0 6px 25px rgba(123,44,191,.5)}
+.ai-fab.hidden{display:none}
+.ai-p{position:fixed;bottom:24px;right:24px;width:400px;max-height:600px;background:var(--bg1);border:1px solid var(--bd);border-radius:var(--r);box-shadow:0 12px 40px rgba(0,0,0,.5);z-index:200;display:flex;flex-direction:column;overflow:hidden;animation:su .3s ease}
+.ai-p.hidden{display:none}
+.ai-p .ah{padding:16px 20px;background:linear-gradient(135deg,var(--cP),var(--cB));display:flex;align-items:center;justify-content:space-between}
+.ai-p .ah h3{font-size:15px;font-weight:700;color:#fff}
+.ai-p .ah .ac{cursor:pointer;color:#fff;font-size:20px;opacity:.8;background:none;border:none}
+.ai-p .ah .ac:hover{opacity:1}
+.ai-p .ax{padding:10px 20px;background:rgba(67,97,238,.08);border-bottom:1px solid var(--bd);font-size:12px;color:var(--cC);display:flex;align-items:center;gap:8px}
+.ai-m{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;max-height:380px;min-height:200px}
+.am{max-width:90%;padding:12px 16px;border-radius:14px;font-size:13px;line-height:1.6;animation:fi .3s}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.am.bot{background:var(--bg2);border:1px solid var(--bd);align-self:flex-start;border-bottom-left-radius:4px}
+.am.user{background:var(--cB);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.am .ml{font-size:10px;font-weight:700;margin-bottom:4px}
+.am.bot .ml{color:var(--cP)}
+.am.user .ml{opacity:.7}
+.am.bot code{background:var(--bg1);padding:1px 6px;border-radius:4px;font-family:monospace;font-size:12px;color:var(--cC)}
+.am.bot ul{padding-left:16px;margin:8px 0}
+.am.bot li{margin-bottom:4px}
+.ai-i{padding:12px 16px;border-top:1px solid var(--bd);display:flex;gap:8px;background:var(--bg2)}
+.ai-i input{flex:1;background:var(--bg1);border:1px solid var(--bd);border-radius:var(--rs);padding:10px 14px;color:var(--t1);font-size:13px;outline:none}
+.ai-i input:focus{border-color:var(--cB)}
+.ai-i input::placeholder{color:var(--t3)}
+.ai-i button{width:40px;height:40px;border-radius:var(--rs);background:var(--cB);border:none;color:#fff;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+.ai-i button:hover{background:#3651d4}
+.ai-q{padding:8px 16px 12px;display:flex;gap:6px;flex-wrap:wrap;background:var(--bg2);border-top:1px solid var(--bd)}
+.aqb{padding:5px 12px;border-radius:20px;background:var(--bg1);border:1px solid var(--bd);font-size:11px;color:var(--t2);cursor:pointer;transition:all .2s}
+.aqb:hover{border-color:var(--cB);color:var(--t1)}
+.ti{display:flex;gap:4px;padding:4px 0}
+.ti span{width:7px;height:7px;border-radius:50%;background:var(--t3);animation:bo 1.4s infinite}
+.ti span:nth-child(2){animation-delay:.2s}
+.ti span:nth-child(3){animation-delay:.4s}
+@keyframes bo{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-8px)}}
+
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--t3)}
+
+@media(max-width:768px){.sb{width:56px}.mc{margin-left:56px}.ai-p{width:calc(100% - 48px);right:24px}.cg{grid-template-columns:1fr}.hero{padding:24px}.hero h1{font-size:24px}.add-user-card .form-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="orb-bg"><div class="o"></div><div class="o"></div><div class="o"></div></div>
+
+<!-- ==================== LOGIN SCREEN ==================== -->
+<div class="login-wrap" id="loginScreen">
+  <div class="login-card">
+    <div class="logo-big">TL</div>
+    <h1><span>TechLearn Pro</span></h1>
+    <p class="sub">Inicia sesión para acceder a tus cursos</p>
+    <div class="login-error" id="loginError"></div>
+    <div class="login-loading" id="loginLoading"><div class="spinner"></div><p style="color:var(--t2);font-size:13px">Autenticando...</p></div>
+
+    <div id="loginForms">
+      <!-- Google -->
+      <button class="btn-google" onclick="loginGoogle()">
+        <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continuar con Google
+      </button>
+
+      <!-- Facebook -->
+      <button class="btn-facebook" onclick="loginFacebook()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        Continuar con Facebook
+      </button>
+
+      <div class="divider">o con correo electrónico</div>
+
+      <!-- Email Login Form -->
+      <div class="email-form" id="emailLoginForm">
+        <label>Correo electrónico</label>
+        <input type="email" id="loginEmail" placeholder="tu@correo.com">
+        <label>Contraseña</label>
+        <input type="password" id="loginPassword" placeholder="Tu contraseña">
+        <button class="btn-primary" onclick="loginEmail()">Iniciar sesión</button>
+        <p class="toggle-form">¿No tienes cuenta? <a onclick="showRegister()">Regístrate aquí</a></p>
+        <p class="toggle-form"><a onclick="showResetPassword()">¿Olvidaste tu contraseña?</a></p>
+      </div>
+
+      <!-- Email Register Form -->
+      <div class="email-form" id="emailRegisterForm" style="display:none">
+        <label>Nombre completo</label>
+        <input type="text" id="regName" placeholder="Tu nombre">
+        <label>Correo electrónico</label>
+        <input type="email" id="regEmail" placeholder="tu@correo.com">
+        <label>Contraseña (mínimo 6 caracteres)</label>
+        <input type="password" id="regPassword" placeholder="Crea una contraseña">
+        <button class="btn-primary" onclick="registerEmail()">Crear cuenta</button>
+        <p class="toggle-form">¿Ya tienes cuenta? <a onclick="showLogin()">Inicia sesión</a></p>
+      </div>
+
+      <!-- Reset Password Form -->
+      <div class="email-form" id="resetForm" style="display:none">
+        <label>Correo electrónico de recuperación</label>
+        <input type="email" id="resetEmail" placeholder="tu@correo.com">
+        <button class="btn-primary" onclick="resetPassword()">Enviar enlace de recuperación</button>
+        <p class="toggle-form"><a onclick="showLogin()">Volver a iniciar sesión</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MAIN APP ==================== -->
+<div class="app hidden" id="mainApp">
+  <nav class="sb">
+    <div class="logo" onclick="navTo('home')">TL</div>
+    <div class="ni on" data-p="home" onclick="navTo('home')">🏠<span class="tp">Inicio</span></div>
+    <div class="ni" data-p="courses" onclick="navTo('courses')">📚<span class="tp">Cursos</span></div>
+    <div class="ni" data-p="progress" onclick="navTo('progress')">📊<span class="tp">Progreso</span></div>
+    <div class="ni" data-p="resources" onclick="navTo('resources')">🔗<span class="tp">Recursos</span></div>
+    <div class="ni" data-p="admin" id="adminNav" style="display:none" onclick="navTo('admin')">👥<span class="tp">Usuarios</span></div>
+    <div class="sp"></div>
+    <div class="ni" onclick="toggleAI()">🤖<span class="tp">Asistente IA</span></div>
+  </nav>
+
+  <div class="mc">
+    <header class="hd">
+      <span class="pt" id="hT">TechLearn Pro</span>
+      <span class="ps" id="hS">Tu plataforma de aprendizaje</span>
+      <div class="sp"></div>
+      <div class="user-info" onclick="toggleUserMenu()">
+        <span class="user-name" id="userName">Usuario</span>
+        <div class="user-avatar" id="userAvatar">U</div>
+        <div class="user-dropdown" id="userDropdown">
+          <div class="dd-header">
+            <div style="font-weight:700;font-size:13px" id="ddName">Usuario</div>
+            <div class="dd-email" id="ddEmail">correo</div>
+          </div>
+          <div class="dd-item" onclick="navTo('progress')">📊 Mi progreso</div>
+          <div class="dd-item" id="ddAdmin" style="display:none" onclick="navTo('admin');toggleUserMenu()">👥 Administrar usuarios</div>
+          <div class="dd-item danger" onclick="logout()">🚪 Cerrar sesión</div>
+        </div>
+      </div>
+    </header>
+    <div class="pc">
+
+      <!-- HOME -->
+      <div id="pg-home" class="pg on">
+        <div class="hero">
+          <h1>Domina las <span>herramientas digitales</span> que el mundo necesita</h1>
+          <p>Aprende Excel, PowerPoint, Photoshop, Illustrator y QGIS con lecciones estructuradas y un asistente IA.</p>
+          <div class="hs">
+            <div class="st"><div class="nm">5</div><div class="lb">Herramientas</div></div>
+            <div class="st"><div class="nm">75</div><div class="lb">Lecciones</div></div>
+            <div class="st"><div class="nm">3</div><div class="lb">Niveles</div></div>
+            <div class="st"><div class="nm">IA</div><div class="lb">Asistente</div></div>
+          </div>
+        </div>
+        <div class="cg" id="hG"></div>
+      </div>
+
+      <!-- COURSES -->
+      <div id="pg-courses" class="pg">
+        <div class="sb2"><input type="text" placeholder="Buscar cursos o lecciones..." id="cS" oninput="filterCourses()"></div>
+        <div class="cg" id="cG"></div>
+      </div>
+
+      <!-- DETAIL -->
+      <div id="pg-detail" class="pg"><div id="dC"></div></div>
+
+      <!-- LESSON -->
+      <div id="pg-lesson" class="pg"><div id="lC"></div></div>
+
+      <!-- PROGRESS -->
+      <div id="pg-progress" class="pg">
+        <div class="po" id="pC"></div>
+        <div class="sc"><h3>📅 Racha de Aprendizaje</h3><div class="sg" id="sG"></div></div>
+      </div>
+
+      <!-- RESOURCES -->
+      <div id="pg-resources" class="pg">
+        <div class="sb2"><input type="text" placeholder="Buscar recursos..." id="rS" oninput="filterResources()"></div>
+        <div class="rg" id="rG"></div>
+      </div>
+
+      <!-- ADMIN USERS -->
+      <div id="pg-admin" class="pg">
+        <div class="admin-header">
+          <h2>👥 Administración de Usuarios</h2>
+          <p>Gestiona los usuarios de la plataforma, asigna roles y envía invitaciones.</p>
+          <div class="stats">
+            <div class="stat"><div class="val" id="statTotal">0</div><div class="label">Total</div></div>
+            <div class="stat"><div class="val" id="statAdmins">0</div><div class="label">Admins</div></div>
+            <div class="stat"><div class="val" id="statUsers">0</div><div class="label">Usuarios</div></div>
+            <div class="stat"><div class="val" id="statPending">0</div><div class="label">Pendientes</div></div>
+          </div>
+        </div>
+
+        <!-- Add User -->
+        <div class="add-user-card">
+          <h3>➕ Agregar Usuario</h3>
+          <div class="form-row">
+            <div><label>Nombre completo</label><input type="text" id="newUserName" placeholder="Nombre del usuario"></div>
+            <div><label>Correo electrónico</label><input type="email" id="newUserEmail" placeholder="correo@ejemplo.com"></div>
+          </div>
+          <div class="form-row">
+            <div><label>Rol</label><select id="newUserRole"><option value="user">Usuario</option><option value="admin">Administrador</option></select></div>
+            <div><label>Contraseña temporal</label><input type="text" id="newUserPass" placeholder="Mínimo 6 caracteres"></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:8px">
+            <button class="btn btn-p" onclick="addUserByEmail()">📩 Crear cuenta y enviar invitación</button>
+            <button class="btn btn-s" onclick="sendInviteLink()">🔗 Generar enlace de invitación</button>
+          </div>
+        </div>
+
+        <!-- Invite Link -->
+        <div class="invite-card">
+          <h3>🔗 Enlace de Invitación</h3>
+          <p>Comparte este enlace para que nuevos usuarios se registren directamente:</p>
+          <div class="invite-link-wrap">
+            <input type="text" id="inviteLink" readonly value="" placeholder="Genera un enlace arriba">
+            <button onclick="copyInviteLink()">📋 Copiar</button>
+          </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="user-table-wrap">
+          <table class="user-table">
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Correo</th>
+                <th>Rol</th>
+                <th>Proveedor</th>
+                <th>Registro</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- AI FAB -->
+<div class="ai-fab hidden" id="aF" onclick="toggleAI()">🤖</div>
+<div class="ai-p hidden" id="aP">
+  <div class="ah"><h3>🤖 Asistente IA TechLearn</h3><button class="ac" onclick="toggleAI()">✕</button></div>
+  <div class="ax" id="aX">📍 Inicio</div>
+  <div class="ai-m" id="aM">
+    <div class="am bot"><div class="ml">TechLearn IA</div>¡Hola! 👋 Soy tu asistente. Pregúntame sobre Excel, PowerPoint, Photoshop, Illustrator o QGIS.</div>
+  </div>
+  <div class="ai-q">
+    <span class="aqb" onclick="quickAI('¿Cómo hacer una tabla dinámica en Excel?')">📊 Tabla dinámica</span>
+    <span class="aqb" onclick="quickAI('¿Cómo usar máscaras en Photoshop?')">🎭 Máscaras PS</span>
+    <span class="aqb" onclick="quickAI('¿Cómo crear un mapa temático en QGIS?')">🗺️ Mapa QGIS</span>
+    <span class="aqb" onclick="quickAI('¿Cómo usar la Pluma en Illustrator?')">✏️ Pluma AI</span>
+    <span class="aqb" onclick="quickAI('¿Cómo hacer animaciones en PowerPoint?')">✨ Animaciones</span>
+    <span class="aqb" onclick="quickAI('Dame atajos de teclado útiles')">⌨️ Atajos</span>
+  </div>
+  <div class="ai-i">
+    <input type="text" id="aI" placeholder="Escribe tu pregunta..." onkeydown="if(event.key==='Enter')sendAI()">
+    <button onclick="sendAI()">➤</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// FIREBASE CONFIG & INIT
+// ============================================================
+var firebaseConfig = {
+  apiKey: "AIzaSyAvwXtYYhNwifh48yy7_cS6aX-LFbzEy6A",
+  authDomain: "argos-370df.firebaseapp.com",
+  projectId: "argos-370df",
+  storageBucket: "argos-370df.firebasestorage.app",
+  messagingSenderId: "395124215996",
+  appId: "1:395124215996:web:37a3c1ec61c15be98ec0b9",
+  measurementId: "G-YRJ5B4C7ZD"
+};
+firebase.initializeApp(firebaseConfig);
+var auth = firebase.auth();
+var db = firebase.firestore();
+
+// Admin emails — SOLO estos usuarios pueden ver el módulo admin
+var ADMIN_EMAILS = ['tkautliz@gmail.com'];
+
+// ============================================================
+// APP STATE
+// ============================================================
+var currentUser = null;
+var currentUserRole = 'user';
+var currentPage = 'home';
+var currentTool = null;
+var currentLevel = 'basico';
+var currentLessonIdx = null;
+var completed = JSON.parse(localStorage.getItem('tl_done') || '{}');
+var allUsersCache = [];
+
+// ============================================================
+// AUTH STATE LISTENER
+// ============================================================
+auth.onAuthStateChanged(function(user) {
+  if (user) {
+    currentUser = user;
+    checkOrCreateUserProfile(user);
+    showApp();
+  } else {
+    currentUser = null;
+    currentUserRole = 'user';
+    showLogin();
+  }
+});
+
+function checkOrCreateUserProfile(user) {
+  var profileRef = db.collection('users').doc(user.uid);
+  profileRef.get().then(function(doc) {
+    if (doc.exists) {
+      var data = doc.data();
+      currentUserRole = data.role || 'user';
+      // Update last login
+      profileRef.update({lastLogin: firebase.firestore.FieldValue.serverTimestamp()});
+    } else {
+      // First time — create profile
+      var isAdmin = ADMIN_EMAILS.indexOf(user.email) >= 0;
+      currentUserRole = isAdmin ? 'admin' : 'user';
+      profileRef.set({
+        name: user.displayName || user.email.split('@')[0],
+        email: user.email,
+        role: currentUserRole,
+        provider: user.providerData[0] ? user.providerData[0].providerId : 'password',
+        photoURL: user.photoURL || '',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    updateUIForUser();
+  }).catch(function(err) {
+    console.error('Error perfil:', err);
+    currentUserRole = 'user';
+    updateUIForUser();
+  });
+}
+
+function updateUIForUser() {
+  var isAdmin = currentUserRole === 'admin';
+  // Sidebar admin nav
+  document.getElementById('adminNav').style.display = isAdmin ? '' : 'none';
+  // Dropdown admin item
+  document.getElementById('ddAdmin').style.display = isAdmin ? '' : 'none';
+  // User info in header
+  var name = currentUser.displayName || currentUser.email.split('@')[0];
+  document.getElementById('userName').textContent = name;
+  document.getElementById('ddName').textContent = name;
+  document.getElementById('ddEmail').textContent = currentUser.email;
+  // Avatar
+  var avDiv = document.getElementById('userAvatar');
+  if (currentUser.photoURL) {
+    avDiv.innerHTML = '<img src="' + currentUser.photoURL + '" alt="avatar">';
+  } else {
+    avDiv.textContent = name.charAt(0).toUpperCase();
+  }
+  // Role badge
+  document.getElementById('userRole') && (document.getElementById('userRole').textContent = isAdmin ? 'ADMIN' : '');
+}
+
+// ============================================================
+// LOGIN FUNCTIONS
+// ============================================================
+function loginGoogle() {
+  showLoginLoading(true);
+  var provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(function(err) {
+    showLoginLoading(false);
+    showLoginError(getAuthError(err));
+  });
+}
+
+function loginFacebook() {
+  showLoginLoading(true);
+  var provider = new firebase.auth.FacebookAuthProvider();
+  auth.signInWithPopup(provider).catch(function(err) {
+    showLoginLoading(false);
+    showLoginError(getAuthError(err));
+  });
+}
+
+function loginEmail() {
+  var email = document.getElementById('loginEmail').value.trim();
+  var pass = document.getElementById('loginPassword').value;
+  if (!email || !pass) { showLoginError('Ingresa correo y contraseña.'); return; }
+  showLoginLoading(true);
+  auth.signInWithEmailAndPassword(email, pass).catch(function(err) {
+    showLoginLoading(false);
+    showLoginError(getAuthError(err));
+  });
+}
+
+function registerEmail() {
+  var name = document.getElementById('regName').value.trim();
+  var email = document.getElementById('regEmail').value.trim();
+  var pass = document.getElementById('regPassword').value;
+  if (!name || !email || !pass) { showLoginError('Completa todos los campos.'); return; }
+  if (pass.length < 6) { showLoginError('La contraseña debe tener al menos 6 caracteres.'); return; }
+  showLoginLoading(true);
+  auth.createUserWithEmailAndPassword(email, pass).then(function(cred) {
+    return cred.user.updateProfile({displayName: name});
+  }).catch(function(err) {
+    showLoginLoading(false);
+    showLoginError(getAuthError(err));
+  });
+}
+
+function resetPassword() {
+  var email = document.getElementById('resetEmail').value.trim();
+  if (!email) { showLoginError('Ingresa tu correo.'); return; }
+  showLoginLoading(true);
+  auth.sendPasswordResetEmail(email).then(function() {
+    showLoginLoading(false);
+    showLoginError('✅ Se envió el enlace de recuperación a ' + email);
+    document.getElementById('loginError').style.background = 'rgba(6,214,160,.1)';
+    document.getElementById('loginError').style.borderColor = 'rgba(6,214,160,.3)';
+    document.getElementById('loginError').style.color = 'var(--cG)';
+  }).catch(function(err) {
+    showLoginLoading(false);
+    showLoginError(getAuthError(err));
+  });
+}
+
+function logout() {
+  auth.signOut();
+  closeUserMenu();
+}
+
+function showLogin() {
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('mainApp').classList.add('hidden');
+  document.getElementById('aF').classList.add('hidden');
+  showLoginLoading(false);
+}
+
+function showApp() {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+  document.getElementById('aF').classList.remove('hidden');
+  showLoginLoading(false);
+  navTo('home');
+}
+
+function showLoginError(msg) {
+  var el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function showLoginLoading(show) {
+  var el = document.getElementById('loginLoading');
+  var forms = document.getElementById('loginForms');
+  if (show) {
+    el.classList.add('show');
+    forms.style.opacity = '0.3';
+    forms.style.pointerEvents = 'none';
+  } else {
+    el.classList.remove('show');
+    forms.style.opacity = '1';
+    forms.style.pointerEvents = '';
+    // Reset error style
+    var errEl = document.getElementById('loginError');
+    errEl.style.background = ''; errEl.style.borderColor = ''; errEl.style.color = '';
+  }
+}
+
+function showRegister() {
+  document.getElementById('emailLoginForm').style.display = 'none';
+  document.getElementById('emailRegisterForm').style.display = '';
+  document.getElementById('resetForm').style.display = 'none';
+  document.getElementById('loginError').classList.remove('show');
+}
+
+function showLogin() {
+  document.getElementById('emailLoginForm').style.display = '';
+  document.getElementById('emailRegisterForm').style.display = 'none';
+  document.getElementById('resetForm').style.display = 'none';
+  document.getElementById('loginError').classList.remove('show');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('mainApp').classList.add('hidden');
+  document.getElementById('aF').classList.add('hidden');
+}
+
+function showResetPassword() {
+  document.getElementById('emailLoginForm').style.display = 'none';
+  document.getElementById('emailRegisterForm').style.display = 'none';
+  document.getElementById('resetForm').style.display = '';
+  document.getElementById('loginError').classList.remove('show');
+}
+
+function getAuthError(err) {
+  var code = err.code || '';
+  var msgs = {
+    'auth/user-not-found': 'No existe una cuenta con ese correo.',
+    'auth/wrong-password': 'Contraseña incorrecta.',
+    'auth/email-already-in-use': 'Ya existe una cuenta con ese correo.',
+    'auth/weak-password': 'La contraseña es muy débil (mínimo 6 caracteres).',
+    'auth/invalid-email': 'Correo electrónico inválido.',
+    'auth/popup-closed-by-user': 'Se cerró la ventana de autenticación.',
+    'auth/cancelled-popup-request': 'Operación cancelada.',
+    'auth/popup-blocked': 'El navegador bloqueó la ventana emergente. Permite ventanas emergentes para este sitio.',
+    'auth/account-exists-with-different-credential': 'Ya existe una cuenta con ese correo usando otro método de inicio.'
+  };
+  return msgs[code] || 'Error: ' + (err.message || code);
+}
+
+// User dropdown
+function toggleUserMenu() {
+  document.getElementById('userDropdown').classList.toggle('show');
+}
+function closeUserMenu() {
+  document.getElementById('userDropdown').classList.remove('show');
+}
+document.addEventListener('click', function(e) {
+  var dd = document.getElementById('userDropdown');
+  var ui = document.querySelector('.user-info');
+  if (dd && ui && !ui.contains(e.target)) dd.classList.remove('show');
+});
+
+// ============================================================
+// ADMIN: USERS MODULE
+// ============================================================
+function loadUsers() {
+  if (currentUserRole !== 'admin') return;
+  db.collection('users').orderBy('createdAt','desc').get().then(function(snap) {
+    allUsersCache = [];
+    var html = '';
+    var total=0, admins=0, users=0, pending=0;
+    snap.forEach(function(doc) {
+      var d = doc.data();
+      d.id = doc.id;
+      allUsersCache.push(d);
+      total++;
+      if (d.role==='admin') admins++;
+      else if (d.role==='user') users++;
+      else pending++;
+      var dateStr = d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleDateString('es') : '—';
+      var providerMap = {'google.com':'Google','facebook.com':'Facebook','password':'Correo','github.com':'GitHub'};
+      var prov = providerMap[d.provider] || d.provider || '—';
+      var avatarHtml = d.photoURL ? '<div class="u-avatar"><img src="'+d.photoURL+'" alt=""></div>' : '<div class="u-avatar">'+(d.name||'?').charAt(0).toUpperCase()+'</div>';
+      var roleBadge = '<span class="role-badge '+d.role+'">'+(d.role||'pendiente')+'</span>';
+      html += '<tr>' +
+        '<td>'+avatarHtml+' <span class="u-name">'+(d.name||'Sin nombre')+'</span></td>' +
+        '<td class="u-email">'+d.email+'</td>' +
+        '<td>'+roleBadge+'</td>' +
+        '<td>'+prov+'</td>' +
+        '<td>'+dateStr+'</td>' +
+        '<td><button class="btn btn-s" style="padding:6px 12px;font-size:11px" onclick="changeRole(\''+doc.id+'\',\''+d.role+'\')">⚙️ Rol</button>' +
+        (d.role!=='admin' ? ' <button class="btn btn-d" style="padding:6px 12px;font-size:11px" onclick="deleteUser(\''+doc.id+'\',\''+d.email+'\')">🗑️</button>' : '') + '</td>' +
+      '</tr>';
+    });
+    document.getElementById('usersTableBody').innerHTML = html || '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--t3)">No hay usuarios registrados</td></tr>';
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statAdmins').textContent = admins;
+    document.getElementById('statUsers').textContent = users;
+    document.getElementById('statPending').textContent = pending;
+  }).catch(function(err) {
+    console.error('Error cargando usuarios:', err);
+  });
+}
+
+function addUserByEmail() {
+  var name = document.getElementById('newUserName').value.trim();
+  var email = document.getElementById('newUserEmail').value.trim();
+  var role = document.getElementById('newUserRole').value;
+  var pass = document.getElementById('newUserPass').value || 'TechLearn2026';
+  if (!name || !email) { alert('Completa nombre y correo.'); return; }
+  if (pass.length < 6) { alert('La contraseña debe tener al menos 6 caracteres.'); return; }
+  // Create user via secondary app to avoid signing out current admin
+  var secondaryApp = firebase.initializeApp(firebaseConfig, 'Secondary');
+  var secondaryAuth = secondaryApp.auth();
+  secondaryAuth.createUserWithEmailAndPassword(email, pass).then(function(cred) {
+    return cred.user.updateProfile({displayName: name}).then(function() {
+      // Save profile in Firestore
+      return db.collection('users').doc(cred.user.uid).set({
+        name: name,
+        email: email,
+        role: role,
+        provider: 'password',
+        photoURL: '',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
+  }).then(function() {
+    secondaryAuth.signOut();
+    secondaryApp.delete();
+    alert('✅ Usuario creado exitosamente.\nCorreo: '+email+'\nContraseña: '+pass+'\n\nSe ha enviado un correo de verificación.');
+    // Clear form
+    document.getElementById('newUserName').value = '';
+    document.getElementById('newUserEmail').value = '';
+    document.getElementById('newUserPass').value = '';
+    loadUsers();
+  }).catch(function(err) {
+    secondaryApp.delete && secondaryApp.delete();
+    alert('Error: ' + getAuthError(err));
+  });
+}
+
+function sendInviteLink() {
+  var baseUrl = window.location.href.split('?')[0];
+  var link = baseUrl + '?invite=true';
+  document.getElementById('inviteLink').value = link;
+  alert('🔗 Enlace generado. Compártelo para que nuevos usuarios se registren.');
+}
+
+function copyInviteLink() {
+  var input = document.getElementById('inviteLink');
+  input.select();
+  navigator.clipboard.writeText(input.value).then(function() {
+    alert('✅ Enlace copiado al portapapeles.');
+  }).catch(function() {
+    document.execCommand('copy');
+    alert('✅ Enlace copiado.');
+  });
+}
+
+function changeRole(uid, currentRole) {
+  var newRole = currentRole === 'admin' ? 'user' : 'admin';
+  if (confirm('¿Cambiar rol a "' + newRole + '"?')) {
+    db.collection('users').doc(uid).update({role: newRole}).then(function() {
+      if (uid === currentUser.uid) {
+        currentUserRole = newRole;
+        updateUIForUser();
+      }
+      loadUsers();
+    }).catch(function(err) { alert('Error: ' + err.message); });
+  }
+}
+
+function deleteUser(uid, email) {
+  if (email === currentUser.email) { alert('No puedes eliminar tu propia cuenta.'); return; }
+  if (confirm('¿Eliminar al usuario ' + email + '?\nSe eliminará el perfil. La cuenta de autenticación debe eliminarse desde Firebase Console.')) {
+    db.collection('users').doc(uid).delete().then(function() {
+      loadUsers();
+    }).catch(function(err) { alert('Error: ' + err.message); });
+  }
+}
+
+// ============================================================
+// COURSES DATA
+// ============================================================
+var COURSES = {
+  excel:{id:'excel',name:'Microsoft Excel',icon:'📊',color:'#06d6a0',desc:'Domina hojas de cálculo, fórmulas, tablas dinámicas, macros y análisis de datos.',total:15,levels:{basico:{name:'Básico',lessons:[{title:'Interfaz y entorno de Excel',dur:'15 min',content:'<h3>Interfaz y entorno de Excel</h3><p>Excel es la hoja de cálculo más utilizada en el mundo.</p><ul class="sl"><li><b>Cinta de opciones:</b> Inicio, Insertar, Diseño, Fórmulas, Datos, Revisar, Vista.</li><li><b>Barra de fórmulas:</b> Muestra y permite editar el contenido de la celda activa.</li><li><b>Hoja de cálculo:</b> Cuadrícula de celdas: columnas (A,B,C...) y filas (1,2,3...).</li><li><b>Selector de hojas:</b> Pestañas en la parte inferior.</li><li><b>Barra de estado:</b> Sumas, conteos y promedios rápidos.</li></ul><p>Atajos: <span class="ks">Ctrl+N</span> nuevo, <span class="ks">Ctrl+G</span> guardar, <span class="ks">Ctrl+Z</span> deshacer, <span class="ks">F2</span> editar celda.</p>'},{title:'Ingreso y edición de datos',dur:'20 min',content:'<h3>Ingreso y edición de datos</h3><p>Los datos son la base de todo en Excel.</p><ul class="sl"><li><b>Celda activa:</b> La celda seleccionada con borde grueso.</li><li><b>Tipos:</b> Texto (izq), Números (der), Fechas, Fórmulas (empiezan con =).</li><li><b>Autocompletar:</b> Arrastra controlador de relleno.</li><li><b>Edición:</b> Doble clic o <span class="ks">F2</span>. <span class="ks">Supr</span> para borrar.</li><li><b>Deshacer/Rehacer:</b> <span class="ks">Ctrl+Z</span> / <span class="ks">Ctrl+Y</span>.</li></ul><div class="tb"><div class="tl">💡 CONSEJO</div>Selecciona varias celdas, escribe valor y <span class="ks">Ctrl+Enter</span> para llenar todas.</div>'},{title:'Formato de celdas',dur:'20 min',content:'<h3>Formato de celdas</h3><ul class="sl"><li><b>Número:</b> Decimales, moneda, porcentajes, fechas.</li><li><b>Alineación:</b> Horizontal, vertical, ajustar texto, combinar.</li><li><b>Fuente:</b> Tipo, tamaño, negrita, cursiva, color.</li><li><b>Bordes:</b> Contorno, interior, personalizados.</li><li><b>Relleno:</b> Color de fondo y patrones.</li></ul><p><span class="ks">Ctrl+1</span> abre Formato de celdas.</p>'},{title:'Fórmulas básicas: SUMA, PROMEDIO, CONTAR',dur:'25 min',content:'<h3>Fórmulas básicas</h3><p>Toda fórmula comienza con = y puede usar funciones.</p><ul class="sl"><li><b>=SUMA(rango):</b> <code>=SUMA(A1:A10)</code></li><li><b>=PROMEDIO(rango):</b> <code>=PROMEDIO(B1:B20)</code></li><li><b>=CONTAR(rango):</b> Cuenta celdas con números.</li><li><b>=MAX/MIN:</b> Valor máximo o mínimo.</li><li><b>Referencias:</b> Relativas (A1), Absolutas ($A$1), Mixtas ($A1).</li></ul><div class="tb"><div class="tl">💡 CONSEJO</div><span class="ks">Alt+=</span> inserta SUMA automáticamente.</div>'},{title:'Ordenar y filtrar datos',dur:'20 min',content:'<h3>Ordenar y filtrar datos</h3><ul class="sl"><li><b>Ordenar:</b> Datos > Ordenar. Por valor, color, lista personalizada.</li><li><b>Múltiples niveles:</b> Primero por Nombre, luego por Fecha.</li><li><b>Filtro automático:</b> Datos > Filtro. Flechas desplegables.</li><li><b>Filtro avanzado:</b> Criterios en rango aparte.</li></ul><p><span class="ks">Ctrl+Mayús+L</span> activar/desactivar filtro.</p>'}]},intermedio:{name:'Intermedio',lessons:[{title:'Tablas dinámicas',dur:'30 min',content:'<h3>Tablas dinámicas</h3><p>La herramienta más poderosa para resumir datos.</p><ul class="sl"><li><b>Crear:</b> Insertar > Tabla dinámica.</li><li><b>Campos:</b> Arrastra a Filas, Columnas, Valores, Filtros.</li><li><b>Valores:</b> Suma, conteo, promedio, máximo, mínimo.</li><li><b>Agrupar:</b> Clic derecho > Agrupar (fechas: años, trimestres, meses).</li><li><b>Segmentadores:</b> Filtros visuales interactivos.</li><li><b>Actualizar:</b> <span class="ks">Alt+F5</span>.</li></ul><div class="tb"><div class="tl">💡 CONSEJO</div>Convierte datos en Tabla (<span class="ks">Ctrl+T</span>) antes de crear la tabla dinámica.</div>'},{title:'BUSCARV y BUSCARX',dur:'30 min',content:'<h3>Funciones de búsqueda</h3><ul class="sl"><li><b>BUSCARV:</b> <code>=BUSCARV(valor,tabla,col,FALSO)</code></li><li><b>Limitaciones:</b> Solo busca a la derecha.</li><li><b>BUSCARX:</b> <code>=BUSCARX(valor,rango_buscar,rango_devolver)</code>. Cualquier dirección.</li><li><b>ÍNDICE+COINCIDIR:</b> <code>=ÍNDICE(rango,COINCIDIR(valor,rango,0))</code></li></ul><div class="tb"><div class="tl">💡 CONSEJO</div>BUSCARX es la evolución. Úsala si tienes Excel 365/2021.</div>'},{title:'Formato condicional',dur:'20 min',content:'<h3>Formato condicional</h3><ul class="sl"><li><b>Reglas destacadas:</b> Mayor que, menor que, entre, igual a.</li><li><b>Escalas de color:</b> Degradado según valor.</li><li><b>Barras de datos:</b> Barras proporcionales.</li><li><b>Conjuntos de iconos:</b> Flechas, semáforos.</li><li><b>Fórmula personalizada:</b> Reglas complejas.</li></ul>'},{title:'Gráficos y visualización',dur:'25 min',content:'<h3>Gráficos</h3><ul class="sl"><li><b>Tipos:</b> Columnas, Barras, Líneas, Circular, Dispersión, Combinado.</li><li><b>Crear:</b> Insertar > Gráfico recomendado.</li><li><b>Elementos:</b> Título, ejes, leyenda, etiquetas de datos.</li><li><b>Gráfico dinámico:</b> Se actualiza con la tabla dinámica.</li></ul><p><span class="ks">Alt+F1</span> inserta gráfico rápido.</p>'},{title:'Validación y protección',dur:'20 min',content:'<h3>Validación y protección</h3><ul class="sl"><li><b>Validación:</b> Datos > Validación. Lista, número, fecha.</li><li><b>Listas desplegables:</b> Permitir > Lista.</li><li><b>Protección:</b> Revisar > Proteger hoja.</li></ul>'}]},avanzado:{name:'Avanzado',lessons:[{title:'Matrices dinámicas: FILTRO, ORDENAR, UNICOS',dur:'35 min',content:'<h3>Matrices dinámicas</h3><ul class="sl"><li><b>FILTRO:</b> <code>=FILTRO(rango,condición)</code></li><li><b>ORDENAR:</b> <code>=ORDENAR(rango,[índice],[orden])</code></li><li><b>UNICOS:</b> <code>=UNICOS(rango)</code></li><li><b>SECUENCIA:</b> <code>=SECUENCIA(filas,[inicio],[paso])</code></li><li><b>Anidamiento:</b> <code>=ORDENAR(FILTRO(A1:D100,D1:D100>1000))</code></li></ul>'},{title:'Power Query',dur:'35 min',content:'<h3>Power Query</h3><ul class="sl"><li><b>Fuentes:</b> CSV, Excel, web, SQL, carpetas, API.</li><li><b>Editor:</b> Transformación sin alterar datos originales.</li><li><b>Transformaciones:</b> Eliminar, dividir, reemplazar, pivotar.</li><li><b>Combinar:</b> Merge o Append.</li><li><b>Actualizar:</b> Reprocesa con datos nuevos.</li></ul>'},{title:'Macros y VBA básico',dur:'40 min',content:'<h3>Macros y VBA</h3><ul class="sl"><li><b>Grabar:</b> Vista > Macros > Grabar macro.</li><li><b>Ejecutar:</b> Vista > Macros > Ver macros > Ejecutar.</li><li><b>Editor VBA:</b> <span class="ks">Alt+F11</span></li><li><b>Estructura:</b> <code>Sub Nombre() ... End Sub</code></li><li><b>Guardar:</b> Como .xlsm.</li></ul><div class="tb"><div class="tl">⚠️ IMPORTANTE</div>Solo habilita macros de fuentes confiables.</div>'},{title:'Dashboard (Tablero de control)',dur:'40 min',content:'<h3>Dashboard</h3><ul class="sl"><li><b>Planificar:</b> Define KPIs, audiencia y fuentes.</li><li><b>Estructura:</b> KPIs arriba, gráficos al centro, detalles abajo.</li><li><b>Segmentadores conectados:</b> Uno controla múltiples tablas.</li><li><b>Formato:</b> Colores consistentes, sin cuadrícula.</li></ul>'},{title:'Power Pivot y DAX',dur:'35 min',content:'<h3>Power Pivot y DAX</h3><ul class="sl"><li><b>Modelo de datos:</b> Tablas relacionadas. Supera 1M filas.</li><li><b>Relaciones:</b> Conecta tablas con campos clave.</li><li><b>DAX:</b> <code>=CALCULATE(SUM(Ventas[Total]),Ventas[Año]=2026)</code></li><li><b>Medidas:</b> Cálculos reutilizables.</li><li><b>Jerarquías:</b> Año > Trimestre > Mes.</li></ul>'}]}},
+  powerpoint:{id:'powerpoint',name:'Microsoft PowerPoint',icon:'📽️',color:'#ff6b35',desc:'Crea presentaciones profesionales con diseño visual, animaciones y narrativa.',total:15,levels:{basico:{name:'Básico',lessons:[{title:'Interfaz de PowerPoint',dur:'15 min',content:'<h3>Interfaz de PowerPoint</h3><ul class="sl"><li><b>Cinta:</b> Inicio, Insertar, Diseño, Transiciones, Animaciones, Presentación.</li><li><b>Panel de diapositivas:</b> Miniaturas a la izquierda.</li><li><b>Área de trabajo:</b> Diapositiva actual.</li><li><b>Panel de notas:</b> Notas del presentador.</li></ul><p><span class="ks">Ctrl+M</span> nueva diapositiva, <span class="ks">F5</span> iniciar presentación.</p>'},{title:'Crear y editar diapositivas',dur:'20 min',content:'<h3>Crear y editar diapositivas</h3><ul class="sl"><li><b>Diseños:</b> Inicio > Diseño.</li><li><b>Texto:</b> Cuadros de texto con fuente, tamaño, color.</li><li><b>Imágenes:</b> Insertar > Imágenes.</li><li><b>Formas:</b> Insertar > Formas.</li><li><b>Tablas y gráficos:</b> Insertar > Tabla / Gráfico.</li></ul><p><span class="ks">Ctrl+D</span> duplicar diapositiva.</p>'},{title:'Temas y diseños',dur:'15 min',content:'<h3>Temas y diseños</h3><ul class="sl"><li><b>Temas:</b> Diseño > Temas.</li><li><b>Colores:</b> Paleta de 10 colores.</li><li><b>Fuentes:</b> Par de fuentes (título + cuerpo).</li><li><b>Efectos:</b> Estilo de formas y líneas.</li></ul>'},{title:'Multimedia: imágenes, audio y video',dur:'20 min',content:'<h3>Multimedia</h3><ul class="sl"><li><b>Imágenes:</b> Insertar > Imágenes.</li><li><b>Audio:</b> Insertar > Audio.</li><li><b>Video:</b> Insertar > Video.</li></ul>'},{title:'Imprimir y exportar',dur:'15 min',content:'<h3>Imprimir y exportar</h3><ul class="sl"><li><b>PDF:</b> Archivo > Exportar > Crear PDF.</li><li><b>Video:</b> Exportar > Crear un video.</li><li><b>Imprimir:</b> <span class="ks">Ctrl+P</span>.</li></ul>'}]},intermedio:{name:'Intermedio',lessons:[{title:'Patrón de diapositivas',dur:'25 min',content:'<h3>Patrón de diapositivas</h3><ul class="sl"><li><b>Acceder:</b> Vista > Patrón de diapositivas.</li><li><b>Editar:</b> Logo, número, fecha, pie de página.</li><li><b>Diseños hijos:</b> Personalizados.</li><li><b>Salir:</b> Patrón > Cerrar.</li></ul><div class="tb"><div class="tl">💡 CONSEJO</div>Haz todo el diseño en el Patrón primero.</div>'},{title:'Animaciones: entrada, énfasis, salida',dur:'30 min',content:'<h3>Animaciones</h3><ul class="sl"><li><b>Entrada:</b> Aparecer, Desvanecer, Volar.</li><li><b>Énfasis:</b> Crecer, Girar, Pulso.</li><li><b>Salida:</b> Desvanecer, Volar afuera.</li><li><b>Panel de animaciones:</b> Orden, tiempo, desencadenadores.</li></ul>'},{title:'Transiciones entre diapositivas',dur:'15 min',content:'<h3>Transiciones</h3><ul class="sl"><li><b>Tipos:</b> Desvanecimiento, Empujar, Cortina, Morph.</li><li><b>Morph:</b> Anima cambios entre diapositivas duplicadas.</li><li><b>Opciones:</b> Duración, sonido, avance automático.</li></ul>'},{title:'Diseño visual y narrativa',dur:'25 min',content:'<h3>Diseño visual y narrativa</h3><ul class="sl"><li><b>Regla 6x6:</b> Máximo 6 líneas, 6 palabras por línea.</li><li><b>Contraste:</b> Texto claro sobre fondo oscuro.</li><li><b>Estructura:</b> Contexto → Problema → Solución → Beneficio → Acción.</li><li><b>Espacio en blanco:</b> No satures.</li></ul>'},{title:'Vincular Excel y otros objetos',dur:'20 min',content:'<h3>Vincular Excel</h3><ul class="sl"><li><b>Vincular gráfico:</b> Copiar > Pegado especial > Vincular.</li><li><b>Actualizar:</b> Al abrir pregunta si actualiza.</li><li><b>Incrustar:</b> Insertar > Objeto.</li></ul>'}]},avanzado:{name:'Avanzado',lessons:[{title:'Morph avanzado',dur:'30 min',content:'<h3>Morph avanzado</h3><ul class="sl"><li><b>Nombrar formas:</b> Prefijo <code>!!</code>: <code>!!Circulo1</code></li><li><b>Animación de números:</b> Morph anima.</li><li><b>Zoom:</b> Insertar > Zoom.</li><li><b>Encadenar:</b> 3-4 diapositivas Morph.</li></ul>'},{title:'Animaciones interactivas',dur:'30 min',content:'<h3>Animaciones interactivas</h3><ul class="sl"><li><b>Desencadenadores:</b> Al hacer clic en.</li><li><b>Menús:</b> Clic muestra/oculta contenido.</li><li><b>Quizz:</b> Correcta → verde, incorrecta → rojo.</li><li><b>Acciones:</b> Insertar > Acción.</li></ul>'},{title:'Narración y presentación en vivo',dur:'25 min',content:'<h3>Presentación en vivo</h3><ul class="sl"><li><b>Grabar:</b> Presentación > Grabar.</li><li><b>Exportar video:</b> Con narración.</li><li><b>Subtítulos en vivo:</b> Transcripción en tiempo real.</li><li><b>En línea:</b> Presentación en vivo.</li></ul>'},{title:'Plantillas profesionales',dur:'35 min',content:'<h3>Plantillas profesionales</h3><ul class="sl"><li><b>Patrón completo:</b> Todos los diseños.</li><li><b>Colores corporativos:</b> Tema personalizado.</li><li><b>Guardar:</b> Como .potx.</li></ul>'},{title:'Colaboración con Microsoft 365',dur:'25 min',content:'<h3>Colaboración</h3><ul class="sl"><li><b>Coautoría:</b> Editan simultáneamente.</li><li><b>Comentarios:</b> @mencionar.</li><li><b>Historial:</b> Versiones anteriores.</li><li><b>Teams:</b> Presentar en reunión.</li></ul>'}]}},
+  photoshop:{id:'photoshop',name:'Adobe Photoshop',icon:'🎨',color:'#4361ee',desc:'Aprende edición fotográfica, manipulación de imágenes y composición digital.',total:15,levels:{basico:{name:'Básico',lessons:[{title:'Interfaz y espacio de trabajo',dur:'15 min',content:'<h3>Interfaz de Photoshop</h3><ul class="sl"><li><b>Barra de herramientas:</b> Selección, recorte, pincel, borrador, texto.</li><li><b>Panel de opciones:</b> Cambia según herramienta.</li><li><b>Paneles:</b> Capas, Propiedades, Ajustes, Color, Historial.</li><li><b>Espacios:</b> Esenciales, Fotografía, Diseño.</li><li><b>Zoom:</b> <span class="ks">Ctrl++</span> / <span class="ks">Ctrl+-</span>. Mano: <span class="ks">Espacio</span>.</li></ul>'},{title:'Capas: el sistema fundamental',dur:'25 min',content:'<h3>Capas</h3><p>El concepto más importante en Photoshop.</p><ul class="sl"><li><b>Panel Capas:</b> Visibilidad, orden, modos de fusión.</li><li><b>Crear:</b> Icono + o <span class="ks">Ctrl+Mayús+N</span>.</li><li><b>Tipos:</b> Píxel, Texto, Forma, Ajuste, Objeto inteligente.</li><li><b>Modos de fusión:</b> Multiplicar, Trama, Superponer, Luz suave.</li><li><b>Grupo:</b> <span class="ks">Ctrl+G</span>.</li></ul><div class="tb"><div class="tl">💡 CONSEJO</div>Convierte a objeto inteligente para edición no destructiva.</div>'},{title:'Herramientas de selección',dur:'25 min',content:'<h3>Selecciones</h3><ul class="sl"><li><b>Marco (M):</b> Rectangular / Elíptico.</li><li><b>Lazo (L):</b> Libre, Poligonal, Magnético.</li><li><b>Varita mágica (W):</b> Por similitud de color.</li><li><b>Selección rápida (W):</b> Pinta la selección.</li><li><b>Seleccionar > Sujeto:</b> IA detecta objetos.</li></ul><p><span class="ks">Ctrl+Mayús+I</span> invertir, <span class="ks">Ctrl+D</span> deseleccionar.</p>'},{title:'Ajustes de imagen: brillo, contraste, color',dur:'20 min',content:'<h3>Ajustes de imagen</h3><ul class="sl"><li><b>Brillo/Contraste:</b> Ajuste global.</li><li><b>Niveles:</b> <span class="ks">Ctrl+L</span>.</li><li><b>Curvas:</b> <span class="ks">Ctrl+M</span>.</li><li><b>Tono/Saturación:</b> <span class="ks">Ctrl+U</span>.</li><li><b>Capas de ajuste:</b> No destructivas.</li></ul>'},{title:'Recorte y transformación',dur:'15 min',content:'<h3>Recorte y transformación</h3><ul class="sl"><li><b>Recortar (C):</b> Con proporciones.</li><li><b>Transformar:</b> <span class="ks">Ctrl+T</span>.</li><li><b>Distorsionar:</b> Editar > Transformar.</li><li><b>Contenido adaptable:</b> Rellena inteligente.</li></ul>'}]},intermedio:{name:'Intermedio',lessons:[{title:'Máscaras de capa',dur:'30 min',content:'<h3>Máscaras de capa</h3><ul class="sl"><li><b>Crear:</b> Icono máscara en panel Capas.</li><li><b>Regla:</b> Blanco = revela, Negro = oculta.</li><li><b>Pintar:</b> Pincel negro para ocultar.</li><li><b>Ver máscara:</b> Alt+clic.</li><li><b>Desactivar:</b> Mayús+clic.</li></ul><div class="tb"><div class="tl">💡 CONSEJO</div>Pincel suave (dureza 0-20%) para transiciones naturales.</div>'},{title:'Modos de fusión',dur:'25 min',content:'<h3>Modos de fusión</h3><ul class="sl"><li><b>Multiplicar:</b> Oscurece.</li><li><b>Trama:</b> Ilumina.</li><li><b>Superponer:</b> Aumenta contraste.</li><li><b>Luz suave:</b> Efecto sutil.</li><li><b>Diferencia:</b> Efectos creativos.</li></ul>'},{title:'Filtros inteligentes y efectos',dur:'25 min',content:'<h3>Filtros inteligentes</h3><ul class="sl"><li><b>Objeto inteligente:</b> Requerido.</li><li><b>Desenfoque gaussiano:</b> Suaviza.</li><li><b>Enfoque:</b> Máscara de enfoque.</li><li><b>Licuefacer:</b> <span class="ks">Ctrl+Mayús+X</span>.</li></ul>'},{title:'Composición digital',dur:'30 min',content:'<h3>Composición digital</h3><ul class="sl"><li><b>Seleccionar:</b> Extraer sujetos.</li><li><b>Refinar borde:</b> Para bordes suaves.</li><li><b>Iluminación:</b> Ajustar luces y sombras.</li><li><b>Color:</b> Coincidir color.</li><li><b>Sombras:</b> Pintar con Multiplicar.</li></ul>'},{title:'Retrato: pieles y ojos',dur:'25 min',content:'<h3>Retrato</h3><ul class="sl"><li><b>Piel:</b> Licuefacer + Parche.</li><li><b>Frecuencia separada:</b> Textura y color separados.</li><li><b>Ojos:</b> Dodge/Burn.</li><li><b>Dientes:</b> Tono/Saturación en amarillos.</li></ul>'}]},avanzado:{name:'Avanzado',lessons:[{title:'Acciones y automatización',dur:'35 min',content:'<h3>Acciones</h3><ul class="sl"><li><b>Crear:</b> Ventana > Acciones.</li><li><b>Grabar:</b> Ejecuta pasos y detén.</li><li><b>Lote:</b> Archivo > Automatizar > Lote.</li><li><b>Gotas:</b> Arrastra archivos para procesar.</li></ul>'},{title:'Composición avanzada',dur:'40 min',content:'<h3>Composición avanzada</h3><ul class="sl"><li><b>Vanishing Point:</b> Pegar en superficies 3D.</li><li><b>HDR:</b> Combina exposiciones.</li><li><b>Profundidad de campo:</b> Desenfoque con mapa.</li><li><b>Integración:</b> Sombras, reflejos, luz.</li></ul>'},{title:'Fotomanipulación creativa',dur:'40 min',content:'<h3>Fotomanipulación</h3><ul class="sl"><li><b>Concepto:</b> Boceto primero.</li><li><b>Extracción:</b> Sujeto + Refinar borde.</li><li><b>Fusión:</b> Modos + máscaras + pintura.</li><li><b>Efectos:</b> Resplandor, sombra, trazos.</li></ul>'},{title:'Preparación para impresión CMYK',dur:'30 min',content:'<h3>Impresión CMYK</h3><ul class="sl"><li><b>Modo:</b> Imagen > Modo > CMYK.</li><li><b>Perfil:</b> FOGRA39.</li><li><b>Sangre:</b> 3mm extra.</li><li><b>Resolución:</b> 300 DPI.</li></ul>'},{title:'Diseño para web y redes sociales',dur:'25 min',content:'<h3>Diseño web y social</h3><ul class="sl"><li><b>RGB:</b> Siempre en RGB para pantalla.</li><li><b>Resolución:</b> 72 DPI.</li><li><b>Tamaños:</b> Instagram 1080x1080, Facebook 1200x630.</li><li><b>Formatos:</b> JPG fotos, PNG transparencias.</li></ul>'}]}},
+  illustrator:{id:'illustrator',name:'Adobe Illustrator',icon:'✏️',color:'#f72585',desc:'Domina el diseño vectorial: logos, ilustraciones, tipografía y patrones.',total:15,levels:{basico:{name:'Básico',lessons:[{title:'Interfaz de Illustrator',dur:'15 min',content:'<h3>Interfaz de Illustrator</h3><ul class="sl"><li><b>Barra:</b> Selección, Pluma, Formas, Texto, Pincel.</li><li><b>Panel Propiedades:</b> Contextual.</li><li><b>Paneles:</b> Capas, Color, Muestras, Trazado.</li><li><b>Mesa de trabajo:</b> Lienzo principal.</li></ul>'},{title:'Formas básicas y edición',dur:'20 min',content:'<h3>Formas básicas</h3><ul class="sl"><li><b>Rectángulo (M):</b> + Mayús = cuadrado.</li><li><b>Elipse (L):</b> + Mayús = círculo.</li><li><b>Polígono:</b> Flechas para lados.</li><li><b>Estrella:</b> Flechas para puntas.</li><li><b>Edición directa (A):</b> Selecciona puntos.</li></ul>'},{title:'Color y relleno',dur:'15 min',content:'<h3>Color y relleno</h3><ul class="sl"><li><b>Relleno y trazo:</b> Cuadros en barra.</li><li><b>Intercambiar:</b> <span class="ks">Mayús+X</span>.</li><li><b>Muestras:</b> Colores guardados.</li><li><b>Color global:</b> Actualiza todos al cambiar.</li></ul>'},{title:'Texto y tipografía',dur:'20 min',content:'<h3>Texto y tipografía</h3><ul class="sl"><li><b>Texto de punto (T):</b> Click.</li><li><b>Texto de área:</b> Arrastra cuadro.</li><li><b>Texto en trazado:</b> Selecciona trazado + Texto.</li><li><b>Contornos:</b> <span class="ks">Ctrl+Mayús+O</span>.</li></ul>'},{title:'Guardar y exportar',dur:'15 min',content:'<h3>Guardar y exportar</h3><ul class="sl"><li><b>AI:</b> Formato nativo editable.</li><li><b>SVG:</b> Vectorial web.</li><li><b>PDF:</b> Impresión + tipografía.</li><li><b>PNG:</b> Web con transparencia.</li></ul>'}]},intermedio:{name:'Intermedio',lessons:[{title:'La herramienta Pluma',dur:'30 min',content:'<h3>Herramienta Pluma</h3><ul class="sl"><li><b>Punto recto:</b> Click.</li><li><b>Punto suave:</b> Click + Arrastrar.</li><li><b>Convertir punto:</b> Alt+Click.</li><li><b>Añadir punto:</b> Click sobre trazado.</li><li><b>Eliminar punto:</b> Click sobre ancla.</li></ul><div class="tb"><div class="tl">💡 CONSEJO</div>Practica 15 min al día con la Pluma.</div>'},{title:'Patrones y repeticiones',dur:'25 min',content:'<h3>Patrones</h3><ul class="sl"><li><b>Crear motivo:</b> Elementos base.</li><li><b>Objeto > Patrón > Crear:</b> Modo edición.</li><li><b>Configurar:</b> Mosaico y desplazamiento.</li><li><b>Aplicar:</b> Como relleno.</li></ul>'},{title:'Máscaras de recorte',dur:'20 min',content:'<h3>Máscaras de recorte</h3><ul class="sl"><li><b>Crear:</b> <span class="ks">Ctrl+7</span></li><li><b>Regla:</b> Forma arriba = máscara.</li><li><b>Texto como máscara:</b> Texto grande > Crear.</li><li><b>Liberar:</b> Objeto > Máscara > Liberar.</li></ul>'},{title:'Efectos y apariencia',dur:'20 min',content:'<h3>Efectos y apariencia</h3><ul class="sl"><li><b>Panel Apariencia:</b> Múltiples rellenos y trazos.</li><li><b>Efectos vectoriales:</b> Distorsionar, Trazos.</li><li><b>Efectos Photoshop:</b> Sombra, resplandor.</li><li><b>Expandir:</b> Convertir efectos en formas.</li></ul>'},{title:'Diseño de logo paso a paso',dur:'30 min',content:'<h3>Diseño de logo</h3><ul class="sl"><li><b>Investigar:</b> Marca y competencia.</li><li><b>Boceto:</b> Papel primero.</li><li><b>Digitalizar:</b> Pluma y formas.</li><li><b>Simplificar:</b> Menos es más.</li><li><b>Versiones:</b> Color, monocromo, invertido.</li></ul>'}]},avanzado:{name:'Avanzado',lessons:[{title:'Perspectiva y malla',dur:'30 min',content:'<h3>Perspectiva</h3><ul class="sl"><li><b>Activar:</b> <span class="ks">Ctrl+Mayús+I</span>.</li><li><b>Planos:</b> Izquierdo, Derecho, Horizontal.</li><li><b>Adjuntar:</b> Objetos al plano.</li></ul>'},{title:'Símbolos y automatización',dur:'25 min',content:'<h3>Símbolos</h3><ul class="sl"><li><b>Crear:</b> Arrastra al panel.</li><li><b>Instancia:</b> Referencia al original.</li><li><b>Editar:</b> Doble clic. Todas se actualizan.</li><li><b>Símbismo:</b> Pinta con símbolos.</li></ul>'},{title:'Diseño 3D e inflate',dur:'30 min',content:'<h3>Efectos 3D</h3><ul class="sl"><li><b>Extruir y Biselar:</b> Efecto > 3D.</li><li><b>Inflar:</b> 2D a 3D.</li><li><b>Materiales:</b> Texturas realistas.</li><li><b>Renderizado:</b> Ray tracing.</li></ul>'},{title:'Preprensa y salida a imprenta',dur:'35 min',content:'<h3>Preprensa</h3><ul class="sl"><li><b>Sangrado:</b> 3mm extra.</li><li><b>CMYK:</b> Modo de color.</li><li><b>Tipografía:</b> Contornos o incrustar.</li><li><b>PDF/X:</b> Estándar imprenta.</li></ul>'},{title:'Integración con Photoshop y After Effects',dur:'25 min',content:'<h3>Integración</h3><ul class="sl"><li><b>Photoshop:</b> Copiar como PSD.</li><li><b>After Effects:</b> Trazados como máscaras.</li><li><b>SVG para web:</b> Exportar.</li><li><b>Creative Cloud:</b> Bibliotecas compartidas.</li></ul>'}]}},
+  qgis:{id:'qgis',name:'QGIS',icon:'🗺️',color:'#4cc9f0',desc:'Aprende Sistemas de Información Geográfica: mapas, geoprocesos y teledetección.',total:15,levels:{basico:{name:'Básico',lessons:[{title:'Interfaz de QGIS',dur:'15 min',content:'<h3>Interfaz de QGIS</h3><ul class="sl"><li><b>Panel de capas:</b> Lista de capas.</li><li><b>Barra de herramientas:</b> Navegación, edición.</li><li><b>Canvas del mapa:</b> Visualización.</li><li><b>Consola Python:</b> <span class="ks">Ctrl+Alt+P</span>.</li></ul>'},{title:'Cargar datos vectoriales y ráster',dur:'20 min',content:'<h3>Cargar datos</h3><ul class="sl"><li><b>Vectorial:</b> Shapefile, GeoJSON, KML, GeoPackage.</li><li><b>Ráster:</b> GeoTIFF, IMG.</li><li><b>CSV:</b> Coordenadas X/Y.</li><li><b>WMS/WFS:</b> Servicios OGC.</li></ul>'},{title:'Simbología básica',dur:'20 min',content:'<h3>Simbología</h3><ul class="sl"><li><b>Categorizado:</b> Por categoría.</li><li><b>Graduado:</b> Por valor numérico.</li><li><b>Paletas:</b> ColorBrewer, CPT-City.</li></ul>'},{title:'Etiquetado de mapas',dur:'15 min',content:'<h3>Etiquetado</h3><ul class="sl"><li><b>Activar:</b> Etiquetas simples.</li><li><b>Estilo:</b> Fuente, buffer.</li><li><b>Conflictos:</b> Motor evita superposiciones.</li></ul>'},{title:'Diseño de impresión',dur:'20 min',content:'<h3>Diseño de impresión</h3><ul class="sl"><li><b>Nuevo:</b> <span class="ks">Ctrl+P</span></li><li><b>Elementos:</b> Mapa, leyenda, escala, norte.</li><li><b>Exportar:</b> Imagen, SVG, PDF.</li><li><b>Atlas:</b> Mapas automáticos por entidad.</li></ul>'}]},intermedio:{name:'Intermedio',lessons:[{title:'Geoprocesos: Buffer, Clip, Intersect',dur:'30 min',content:'<h3>Geoprocesos</h3><ul class="sl"><li><b>Buffer:</b> Zona de influencia.</li><li><b>Clip:</b> Recortar con molde.</li><li><b>Intersectar:</b> Parte común.</li><li><b>Diferencia:</b> A menos B.</li><li><b>Disolver:</b> Unir adyacentes.</li></ul><div class="tb"><div class="tl">💡 CONSEJO</div>La distancia del Buffer depende del SRC.</div>'},{title:'Tabla de atributos y cálculos',dur:'25 min',content:'<h3>Tabla de atributos</h3><ul class="sl"><li><b>Abrir:</b> <span class="ks">F6</span></li><li><b>Filtro:</b> Seleccionar por expresión.</li><li><b>Calculadora:</b> Crear campos con fórmulas.</li><li><b>Estadísticas:</b> Resumen de campos.</li></ul>'},{title:'Consultas espaciales',dur:'20 min',content:'<h3>Consultas espaciales</h3><ul class="sl"><li><b>Seleccionar por ubicación:</b> Dentro de, toca, cruza.</li><li><b>Unión espacial:</b> Transferir atributos.</li><li><b>Conteo:</b> Puntos en polígonos.</li></ul>'},{title:'Geocodificación',dur:'20 min',content:'<h3>Geocodificación</h3><ul class="sl"><li><b>¿Qué es?</b> Direcciones a coordenadas.</li><li><b>Complemento:</b> Geocodificar.</li><li><b>Servicios:</b> Nominatim, Google.</li><li><b>Inversa:</b> Coordenadas a dirección.</li></ul>'},{title:'Complementos esenciales',dur:'20 min',content:'<h3>Complementos</h3><ul class="sl"><li><b>QuickMapServices:</b> Mapas base.</li><li><b>ProfileTool:</b> Perfiles de elevación.</li><li><b>QGIS2Web:</b> Mapa web interactivo.</li></ul>'}]},avanzado:{name:'Avanzado',lessons:[{title:'PyQGIS: automatización con Python',dur:'35 min',content:'<h3>PyQGIS</h3><ul class="sl"><li><b>Consola:</b> <span class="ks">Ctrl+Alt+P</span></li><li><b>Cargar capa:</b> <code>iface.addVectorLayer()</code></li><li><b>Iterar:</b> <code>for f in layer.getFeatures()</code></li><li><b>Scripts:</b> Procesamiento > Crear script.</li><li><b>Plugins:</b> Empaquetar como complemento.</li></ul>'},{title:'Model Designer',dur:'30 min',content:'<h3>Model Designer</h3><ul class="sl"><li><b>Abrir:</b> Procesamiento > Modelador.</li><li><b>Entradas:</b> Capa, número, cadena.</li><li><b>Algoritmos:</b> Buffer, Clip, etc.</li><li><b>Conectar:</b> Salida = entrada.</li><li><b>Guardar:</b> Modelo reutilizable.</li></ul>'},{title:'Teledetección con QGIS',dur:'35 min',content:'<h3>Teledetección</h3><ul class="sl"><li><b>Satelitales:</b> Sentinel-2, Landsat-8.</li><li><b>NDVI:</b> <code>(NIR-Red)/(NIR+Red)</code></li><li><b>Calculadora ráster:</b> Bandas aritméticas.</li><li><b>Clasificación:</b> Supervisada con SCP.</li></ul>'},{title:'Análisis de redes y rutas',dur:'30 min',content:'<h3>Análisis de redes</h3><ul class="sl"><li><b>Ruta más corta:</b> Dijkstra/A*.</li><li><b>Área de servicio:</b> Zona alcanzable en X min.</li><li><b>OSM:</b> QuickOSM.</li></ul>'},{title:'Publicación de mapas web',dur:'30 min',content:'<h3>Mapas web</h3><ul class="sl"><li><b>QGIS2Web:</b> Exporta a Leaflet/OpenLayers.</li><li><b>GeoServer:</b> WMS/WFS profesionales.</li><li><b>QGIS Server:</b> Servidor nativo OGC.</li></ul>'}]}}
+  }
+};
+
+// ============================================================
+// RESOURCES
+// ============================================================
+var RESOURCES = [
+  {type:'course',tool:'Excel',title:'Microsoft Excel Learning',desc:'Ruta oficial de Microsoft.',link:'https://learn.microsoft.com/es-es/training/paths/excel-learn/'},
+  {type:'video',tool:'Excel',title:'Excel 2025 Complete Course',desc:'Curso intensivo de 2 horas YouTube.',link:'https://www.youtube.com/watch?v=V62oKsHGsCo'},
+  {type:'doc',tool:'Excel',title:'Exceljet Tips',desc:'Referencia de fórmulas y atajos.',link:'https://exceljet.net/'},
+  {type:'course',tool:'PowerPoint',title:'Microsoft PowerPoint Learn',desc:'Ruta oficial.',link:'https://learn.microsoft.com/es-us/training/paths/powerpoint-learn/'},
+  {type:'video',tool:'PowerPoint',title:'PowerPoint Full Course',desc:'Curso completo YouTube.',link:'https://www.youtube.com/watch?v=bH1PZfnxcC8'},
+  {type:'course',tool:'Photoshop',title:'Adobe Learn Photoshop',desc:'Rutas oficiales de Adobe.',link:'https://www.adobe.com/learn/photoshop'},
+  {type:'video',tool:'Photoshop',title:'Photoshop 2025 Crash Course',desc:'1 hora YouTube.',link:'https://www.youtube.com/watch?v=I8RSH4YiKeg'},
+  {type:'course',tool:'Illustrator',title:'Adobe Learn Illustrator',desc:'Rutas oficiales.',link:'https://www.adobe.com/learn/illustrator'},
+  {type:'course',tool:'QGIS',title:'QGIS Training Manual',desc:'Manual oficial.',link:'https://docs.qgis.org/latest/en/docs/training_manual/index.html'},
+  {type:'video',tool:'QGIS',title:'QGIS Full Course',desc:'Curso completo YouTube.',link:'https://www.youtube.com/watch?v=SovdBaus7pM'},
+  {type:'doc',tool:'QGIS',title:'QGIS Tutorials',desc:'Tutoriales prácticos.',link:'https://www.qgistutorials.com/'}
+];
+
+// ============================================================
+// AI KNOWLEDGE BASE
+// ============================================================
+var KB = {
+  excel:{shortcuts:'Atajos Excel:\n• Ctrl+C/V — Copiar/Pegar\n• Ctrl+Z — Deshacer\n• Ctrl+Mayús+L — Filtro\n• Alt+= — SUMA automática\n• F2 — Editar celda\n• F4 — Relativa/Absoluta\n• Ctrl+1 — Formato\n• Ctrl+T — Tabla',topics:{'tabla dinámica':'📋 Tabla Dinámica:\n1. Selecciona datos (Ctrl+T)\n2. Insertar > Tabla dinámica\n3. Arrastra: Filas, Columnas, Valores\n4. Segmentadores para filtros\n5. Alt+F5 actualizar','buscarv':'🔍 BUSCARV:\n=BUSCARV(valor,tabla,col,FALSO)\n\nBUSCARX (mejor):\n=BUSCARX(valor,rango_buscar,rango_devolver)','macros':'🤖 Macros:\n1. Vista > Macros > Grabar\n2. Ejecuta acciones\n3. Detener\n4. Alt+F11 Editor VBA','fórmula':'📐 Fórmulas:\n• =SUMA =PROMEDIO =CONTAR\n• =BUSCARV =BUSCARX\n• =SI(condición,si,no)\n• =FILTRO =ORDENAR =UNICOS'}},
+  powerpoint:{shortcuts:'Atajos PowerPoint:\n• F5 — Iniciar\n• Ctrl+M — Nueva diapositiva\n• Ctrl+D — Duplicar\n• B — Pantalla negra\n• Esc — Salir',topics:{'animación':'✨ Animaciones:\n1. Selecciona objeto\n2. Animaciones > Galería\n3. Panel para orden y tiempo','morph':'🔄 Morph:\n1. Duplica diapositiva\n2. Mueve objetos\n3. Transición > Transformación','plantilla':'🎨 Plantilla:\n1. Vista > Patrón\n2. Fondo, logo, fuentes\n3. Guardar como .potx'}},
+  photoshop:{shortcuts:'Atajos Photoshop:\n• B — Pincel | V — Mover\n• M — Marco | W — Varita\n• Ctrl+J — Copiar capa\n• Ctrl+T — Transformar\n• [ / ] — Tamaño pincel',topics:{'máscara':'🎭 Máscaras:\nBlanco=revela, Negro=oculta\n1. Icono máscara en Capas\n2. Pinta negro para ocultar\n3. Alt+clic para ver','capas':'📑 Capas:\nTipos: Píxel, Texto, Forma, Ajuste, Inteligente\nModos: Multiplicar, Trama, Superponer','selección':'✂️ Selecciones:\nMarco(M), Lazo(L), Varita(W)\nSeleccionar > Sujeto (IA)\nCtrl+Mayús+I invertir'}},
+  illustrator:{shortcuts:'Atajos Illustrator:\n• V — Selección | A — Directa\n• P — Pluma | T — Texto\n• M — Rectángulo | L — Elipse\n• Ctrl+7 — Máscara recorte\n• Ctrl+Mayús+O — Contornos',topics:{'pluma':'✏️ Pluma:\nClic = punto recto\nClic+Arrastrar = suave con tiradores\nAlt+clic = convertir punto','logo':'🎨 Logo:\n1. Boceto → Digitalizar → Simplificar\n2. Versiones: color, monocromo\n3. Exportar: SVG, AI, PNG','patrón':'🔁 Patrón:\n1. Crea motivo\n2. Objeto > Patrón > Crear\n3. Aplica como relleno'}},
+  qgis:{shortcuts:'Atajos QGIS:\n• Ctrl+Mayús+V — Capa vectorial\n• Ctrl+P — Diseño impresión\n• F6 — Tabla atributos\n• Ctrl+Alt+P — Python',topics:{'mapa':'🗺️ Mapa temático:\n1. Carga capa vectorial\n2. Propiedades > Simbología\n3. Categorizado o Graduado\n4. Diseño de impresión','buffer':'📍 Buffer:\n1. Procesamiento > Zona de influencia\n2. Capa + Distancia\n3. Dissolve para unir','geoproceso':'⚙️ Geoprocesos:\n• Buffer — Zona alrededor\n• Clip — Recortar\n• Intersectar — Parte común\n• Disolver — Unir adyacentes','python':'🐍 PyQGIS:\n1. Ctrl+Alt+P Consola\n2. iface.addVectorLayer()\n3. for f in layer.getFeatures()'}}
+};
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function navTo(page) {
+  var pages = document.querySelectorAll('.pg');
+  for (var i=0;i<pages.length;i++) pages[i].classList.remove('on');
+  var target = document.getElementById('pg-'+page);
+  if (target) target.classList.add('on');
+  var items = document.querySelectorAll('.sb .ni[data-p]');
+  for (var i=0;i<items.length;i++) items[i].classList.remove('on');
+  var active = document.querySelector('.sb .ni[data-p="'+page+'"]');
+  if (active) active.classList.add('on');
+  var titles = {home:'TechLearn Pro',courses:'Cursos',progress:'Mi Progreso',resources:'Recursos',admin:'👥 Usuarios',detail:'Curso',lesson:'Lección'};
+  var subs = {home:'Tu plataforma de aprendizaje',courses:'Explora herramientas',progress:'Tu avance',resources:'Enlaces y tutoriales',admin:'Administración de usuarios',detail:'',lesson:''};
+  document.getElementById('hT').textContent = titles[page]||'TechLearn Pro';
+  document.getElementById('hS').textContent = subs[page]||'';
+  currentPage = page;
+  if (page==='home') renderHome();
+  if (page==='courses') renderCourses();
+  if (page==='progress') renderProgress();
+  if (page==='resources') renderResources();
+  if (page==='admin') loadUsers();
+  updateAIContext();
+}
+
+// ============================================================
+// RENDER FUNCTIONS
+// ============================================================
+function renderHome() {
+  var c = document.getElementById('hG'); c.innerHTML='';
+  var keys = Object.keys(COURSES);
+  for (var i=0;i<keys.length;i++) c.innerHTML += makeCard(COURSES[keys[i]]);
+}
+
+function makeCard(c) {
+  var p = getProgress(c.id);
+  return '<div class="cc" data-t="'+c.id+'" onclick="openCourse(\''+c.id+'\')"><div class="ci">'+c.icon+'</div><h3>'+c.name+'</h3><div class="cd">'+c.desc+'</div><div class="cm"><span class="ls">📖 '+c.total+' lecciones</span><span class="lv">Básico → Avanzado</span></div><div class="cpb"><div class="fl" style="width:'+p+'%"></div></div></div>';
+}
+
+function renderCourses(filter) {
+  var c = document.getElementById('cG'); c.innerHTML='';
+  var keys = Object.keys(COURSES);
+  for (var i=0;i<keys.length;i++) {
+    var co = COURSES[keys[i]];
+    if (filter) { var q=filter.toLowerCase(); if(co.name.toLowerCase().indexOf(q)<0&&co.desc.toLowerCase().indexOf(q)<0) continue; }
+    c.innerHTML += makeCard(co);
+  }
+}
+
+function filterCourses() { renderCourses(document.getElementById('cS').value); }
+
+function openCourse(id) {
+  currentTool=id; currentLevel='basico';
+  var c=COURSES[id]; var p=getProgress(id);
+  var rgb=hexToRgb(c.color);
+  document.getElementById('dC').innerHTML='<div class="ch"><div class="chi" style="background:rgba('+rgb+',.15);color:'+c.color+'">'+c.icon+'</div><h2>'+c.name+'</h2><p>'+c.desc+'</p><div class="chm"><span>📖 '+c.total+' lecciones</span><span>⏱️ ~'+(c.total*22)+' min</span><span>📊 '+p+'%</span></div></div><div class="lt"><div class="ltb on" id="tab-basico" onclick="switchLevel(\'basico\')">🟢 Básico</div><div class="ltb" id="tab-intermedio" onclick="switchLevel(\'intermedio\')">🟡 Intermedio</div><div class="ltb" id="tab-avanzado" onclick="switchLevel(\'avanzado\')">🔴 Avanzado</div></div><div class="ll" id="lessonList"></div>';
+  navTo('detail');
+  document.getElementById('hT').textContent=c.name;
+  document.getElementById('hS').textContent='Lecciones y contenido';
+  renderLessons();
+}
+
+function switchLevel(lvl) {
+  currentLevel=lvl;
+  ['basico','intermedio','avanzado'].forEach(function(t){
+    var tab=document.getElementById('tab-'+t); if(tab) tab.classList.toggle('on',t===lvl);
+  });
+  renderLessons();
+}
+
+function renderLessons() {
+  var c=COURSES[currentTool]; var ls=c.levels[currentLevel].lessons;
+  var el=document.getElementById('lessonList'); el.innerHTML='';
+  for(var i=0;i<ls.length;i++) {
+    var l=ls[i]; var key=currentTool+'_'+currentLevel+'_'+i;
+    var done=completed[key]?true:false;
+    el.innerHTML+='<div class="li'+(done?' done':'')+'" onclick="openLesson('+i+')"><div class="ln">'+(done?'✓':(i+1))+'</div><div class="lif"><h4>'+l.title+'</h4><div class="ld">⏱️ '+l.dur+'</div></div><div class="lst">'+(done?'✅':'▶️')+'</div></div>';
+  }
+}
+
+function openLesson(idx) {
+  currentLessonIdx=idx;
+  var c=COURSES[currentTool]; var l=c.levels[currentLevel].lessons[idx]; var total=c.levels[currentLevel].lessons.length;
+  var key=currentTool+'_'+currentLevel+'_'+idx; var done=completed[key];
+  document.getElementById('lC').innerHTML='<div class="lc">'+l.content+'<div class="lnav">'+(idx>0?'<button class="btn btn-s" onclick="openLesson('+(idx-1)+')">◀ Anterior</button>':'')+'<button class="btn btn-g" onclick="completeLesson('+idx+')">'+(done?'✓ Completada':'✓ Completar lección')+'</button>'+(idx<total-1?'<button class="btn btn-p" onclick="openLesson('+(idx+1)+')">Siguiente ▶</button>':'<button class="btn btn-s" onclick="openCourse(\''+currentTool+'\')">📚 Volver</button>')+'</div></div>';
+  navTo('lesson');
+  document.getElementById('hT').textContent=l.title;
+  document.getElementById('hS').textContent=c.name+' — '+c.levels[currentLevel].name;
+  updateAIContext();
+}
+
+function completeLesson(idx) {
+  var key=currentTool+'_'+currentLevel+'_'+idx;
+  completed[key]=true;
+  localStorage.setItem('tl_done',JSON.stringify(completed));
+  // Also save to Firestore
+  if (currentUser) {
+    db.collection('userProgress').doc(currentUser.uid).set({completed:completed},{merge:true});
+  }
+  var c=COURSES[currentTool]; var total=c.levels[currentLevel].lessons.length;
+  if(idx<total-1) openLesson(idx+1); else openCourse(currentTool);
+}
+
+function getProgress(id) {
+  var c=COURSES[id]; var d=0,t=0;
+  var levels=Object.keys(c.levels);
+  for(var i=0;i<levels.length;i++) {
+    var ls=c.levels[levels[i]].lessons;
+    for(var j=0;j<ls.length;j++) { t++; if(completed[id+'_'+levels[i]+'_'+j]) d++; }
+  }
+  return t?Math.round(d/t*100):0;
+}
+
+function renderProgress() {
+  var c=document.getElementById('pC'); c.innerHTML='';
+  var keys=Object.keys(COURSES);
+  for(var i=0;i<keys.length;i++) {
+    var co=COURSES[keys[i]]; var p=getProgress(co.id);
+    c.innerHTML+='<div class="poc"><div class="pi">'+co.icon+'</div><div class="pl">'+co.name+'</div><div class="pv" style="color:'+co.color+'">'+p+'%</div><div class="pb"><div class="fl" style="width:'+p+'%;background:'+co.color+'"></div></div></div>';
+  }
+  var grid=document.getElementById('sG'); grid.innerHTML='';
+  var today=new Date();
+  for(var i=27;i>=0;i--) { var dd=new Date(today); dd.setDate(dd.getDate()-i); grid.innerHTML+='<div class="sd'+(i<5?' ac':'')+'"></div>'; }
+}
+
+function renderResources(filter) {
+  var c=document.getElementById('rG'); c.innerHTML='';
+  for(var i=0;i<RESOURCES.length;i++) {
+    var r=RESOURCES[i];
+    if(filter) { var q=filter.toLowerCase(); if(r.title.toLowerCase().indexOf(q)<0&&r.desc.toLowerCase().indexOf(q)<0) continue; }
+    c.innerHTML+='<div class="rc"><span class="rt '+r.type+'">'+r.type+'</span><h4>'+r.title+'</h4><p>'+r.desc+'</p><a class="rl" href="'+r.link+'" target="_blank" rel="noopener">🔗 Abrir recurso</a></div>';
+  }
+}
+
+function filterResources() { renderResources(document.getElementById('rS').value); }
+
+// ============================================================
+// AI ASSISTANT
+// ============================================================
+function toggleAI() {
+  var p=document.getElementById('aP'); var f=document.getElementById('aF');
+  if(p.classList.contains('hidden')){p.classList.remove('hidden');f.classList.add('hidden');}
+  else{p.classList.add('hidden');f.classList.remove('hidden');}
+}
+
+function updateAIContext() {
+  var el=document.getElementById('aX');
+  if(currentPage==='lesson'&&currentTool) el.textContent='📖 '+COURSES[currentTool].name+' — '+COURSES[currentTool].levels[currentLevel].name;
+  else if(currentPage==='detail'&&currentTool) el.textContent='📚 '+COURSES[currentTool].name;
+  else el.textContent='📍 Inicio — Pregúntame sobre cualquier herramienta';
+}
+
+function sendAI() {
+  var inp=document.getElementById('aI'); var q=inp.value.trim(); if(!q)return; inp.value='';
+  addMsg(q,'user'); showTyping();
+  setTimeout(function(){removeTyping();respondAI(q);},500+Math.random()*500);
+}
+
+function quickAI(q) {
+  addMsg(q,'user'); showTyping();
+  setTimeout(function(){removeTyping();respondAI(q);},300+Math.random()*400);
+}
+
+function addMsg(text,type) {
+  var b=document.getElementById('aM'); var d=document.createElement('div'); d.className='am '+type;
+  d.innerHTML='<div class="ml">'+(type==='user'?'Tú':'TechLearn IA')+'</div>'+text;
+  b.appendChild(d); b.scrollTop=b.scrollHeight;
+}
+
+function showTyping() {
+  var b=document.getElementById('aM'); var d=document.createElement('div'); d.className='am bot'; d.id='typingB';
+  d.innerHTML='<div class="ml">TechLearn IA</div><div class="ti"><span></span><span></span><span></span></div>';
+  b.appendChild(d); b.scrollTop=b.scrollHeight;
+}
+
+function removeTyping() { var e=document.getElementById('typingB'); if(e)e.remove(); }
+
+function respondAI(q) {
+  var ql=q.toLowerCase(); var tool=currentTool;
+  if(ql.indexOf('excel')>=0)tool='excel';
+  else if(ql.indexOf('powerpoint')>=0||ql.indexOf('ppt')>=0)tool='powerpoint';
+  else if(ql.indexOf('photoshop')>=0||ql.indexOf('foto')>=0)tool='photoshop';
+  else if(ql.indexOf('illustrator')>=0||ql.indexOf('ilustrador')>=0||ql.indexOf('vector')>=0)tool='illustrator';
+  else if(ql.indexOf('qgis')>=0||ql.indexOf('mapa')>=0||ql.indexOf('gis')>=0||ql.indexOf('sig')>=0)tool='qgis';
+  var kb=KB[tool]; var reply='';
+  if(ql.indexOf('atajo')>=0||ql.indexOf('shortcut')>=0||ql.indexOf('teclado')>=0) {
+    reply=kb?kb.shortcuts:'Menciona una herramienta y te daré sus atajos.';
+  } else if(kb&&kb.topics) {
+    var found=false;
+    for(var k in kb.topics) { if(ql.indexOf(k)>=0){reply=kb.topics[k];found=true;break;} }
+    if(!found) reply=genResponse(tool,ql);
+  } else { reply=ql.indexOf('hola')>=0||ql.indexOf('ayuda')>=0?'¡Hola! 👋 Pregúntame sobre Excel, PowerPoint, Photoshop, Illustrator o QGIS.':genResponse(tool,ql); }
+  addMsg(reply.replace(/\n/g,'<br>'),'bot');
+}
+
+function genResponse(tool,ql) {
+  if(!tool||!COURSES[tool]) return 'Menciona: Excel, PowerPoint, Photoshop, Illustrator o QGIS.\nEjemplo: "¿Cómo hacer una tabla dinámica en Excel?"';
+  var c=COURSES[tool]; var txt='📚 Sobre '+c.name+':\n\n';
+  var levels=Object.keys(c.levels);
+  for(var i=0;i<levels.length;i++) {
+    txt+=c.levels[levels[i]].name+': '+c.levels[levels[i]].lessons.map(function(l){return l.title}).join(', ')+'\n\n';
+  }
+  txt+='Pregúntame sobre algún tema o pide atajos. ⌨️';
+  return txt;
+}
+
+// ============================================================
+// UTILITY
+// ============================================================
+function hexToRgb(hex) {
+  var r=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return r?parseInt(r[1],16)+','+parseInt(r[2],16)+','+parseInt(r[3],16):'255,255,255';
+}
+
+// Load saved progress from Firestore on login
+function loadProgressFromCloud() {
+  if (!currentUser) return;
+  db.collection('userProgress').doc(currentUser.uid).get().then(function(doc) {
+    if (doc.exists) {
+      var cloud = doc.data().completed || {};
+      // Merge: cloud takes priority, then localStorage
+      var merged = {};
+      for (var k in cloud) merged[k] = cloud[k];
+      for (var k in completed) if (!merged[k]) merged[k] = completed[k];
+      completed = merged;
+      localStorage.setItem('tl_done', JSON.stringify(completed));
+    }
+  }).catch(function(err){ console.error('Error progreso:', err); });
+}
+
+// Override showApp to also load progress
+var _origShowApp = showApp;
+showApp = function() {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+  document.getElementById('aF').classList.remove('hidden');
+  showLoginLoading(false);
+  loadProgressFromCloud();
+  navTo('home');
+};
+</script>
+</body>
+</html>
